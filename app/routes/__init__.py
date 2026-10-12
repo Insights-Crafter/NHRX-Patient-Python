@@ -1,2 +1,2 @@
-from PatientRegRoutes import router
+from routes.PatientRegRoutes import router
 
