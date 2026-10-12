@@ -1,0 +1,212 @@
+﻿===== clinicalNotes.py =====
+
+from database.database import Base
+from sqlalchemy import Column , Integer ,  ForeignKey, TIMESTAMP, String
+
+
+class ClinicalNotes(Base):
+    __tablename__ = "ClinicalNotes"
+
+    noteID = Column(Integer, primary_key=True)
+    recordID = Column(Integer, ForeignKey("MedicalRecords.recordID"), Integer)
+    DiagnosisID = Column(Integer, ForeignKey("RecordDiagnosis.diagnosisID"))
+    Notes = Column(String)
+
+
+===== Medical_Record_Diagnosis.py =====
+
+from database.database import Base
+from sqlalchemy import Column , Integer ,  ForeignKey, TIMESTAMP, String
+
+
+class ClinicalNotes(Base):
+    __tablename__ = "RecordDiagnosis"
+
+    diagnosisID = Column(Integer, primary_key=True)
+    recordID = Column(Integer, ForeignKey("MedicalRecords.recordID"), Integer)
+    Diagnosis = Column(String)
+    Diagnosisnotes = Column(String)
+
+
+===== MedicalRecords.py =====
+
+from database.database import Base
+from sqlalchemy import Column , Integer ,  ForeignKey, TIMESTAMP, String, DATE
+
+class MedicalRecords(Base):
+    __tablename__ = "MedicalRecords"
+    recordID = Column(Integer, primary_key=True)
+    patientID = Column(Integer, ForeignKey("Patients.patientID"))
+    # These targets are teammate-owned tables; their agreed primary keys are
+    # doctors.doctorID and hospitals.hospitalID.
+    doctorID = Column(Integer, ForeignKey("doctors.doctorID"))
+    hospitalID = Column(Integer, ForeignKey("hospitals.hospitalID"))
+    recordDATE = Column(TIMESTAMP)
+    recordType = Column(String)
+    cheif_complaint = Column(String)
+    follow_up_date = Column(DATE)
+
+
+
+===== MedicalTestModel.py =====
+
+# MEDICAL_TEST
+from sqlalchemy import Column, Integer, String, Text
+from database.database import Base
+
+
+class MedicalTest(Base):
+    __tablename__ = "medical_tests"
+
+    test_id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(150), nullable=False, unique=True)
+    description = Column(Text)
+
+===== MedicationsModel.py =====
+
+from database.database import Base
+from sqlalchemy import Column , Integer, String
+
+
+class Medications(Base):
+    __tablename__ = "Medications"
+    MedID = Column(Integer, primary_key=True)
+    MedicineName = Column(String)
+    Formula = Column(String)
+    Strength = Column(String)
+
+
+===== PatientAddress.py =====
+
+from sqlalchemy import Integer, Column, ForeignKey, Text
+from database.database import Base
+
+class PatientAddress(Base):
+    __tablename__ = "PatientAddress"
+    AddressID = Column(Integer, primary_key=True)
+    patientID = Column(Integer, ForeignKey("Patients.patientID", ondelete="CASCADE", onupdate="CASCADE"))
+    # Address fields may contain encrypted values, whose length can exceed
+    # the plaintext value's length.
+    Area = Column(Text)
+    HouseNumber = Column(Text)
+    Province = Column(Text)
+    City = Column(Text)
+    Street = Column(Text)
+    Block = Column(Text)
+
+
+===== PatientModel.py =====
+
+from sqlalchemy import Integer, Column, Text, DATE
+from database.database import Base
+
+
+class Patient(Base):
+    __tablename__ = "Patients"
+    patientID = Column(Integer,primary_key=True)
+    # PII fields use Text so they can hold variable-length encrypted values.
+    nationalID = Column(Text)
+    firstName = Column(Text)
+    lastName = Column(Text)
+    date_of_birth = Column(Text)
+    blood_group = Column(Text)
+    gender = Column(Text)
+    phone = Column(Text)
+    email = Column(Text)
+    createdAt = Column(DATE)
+
+
+
+
+
+
+===== RecordMedicines.py =====
+
+from sqlalchemy import Integer, String, Column, ForeignKey
+from database.database import Base
+
+
+class RecordMedicines(Base):
+    __tablename__ = "RecordMedicines"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(Integer, ForeignKey("MedicalRecords.recordID"), nullable=False, index=True)
+    medicineID = Column(Integer, ForeignKey("Medications.MedID"))
+    dosage = Column(String)
+    frequency = Column(String)
+    duration_days = Column(Integer)
+    
+
+
+===== recordSymptomsModel.py =====
+
+from sqlalchemy import Column, Integer, String, ForeignKey, TEXT
+
+from database.database import Base
+
+class RecordSymptom(Base):
+    __tablename__ = "record_symptoms"
+    
+ 
+    record_symptom_id = Column(Integer, primary_key=True)
+    record_id = Column(
+        Integer,
+        ForeignKey("MedicalRecords.recordID", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    symptom_id = Column(
+        Integer,
+        ForeignKey("symptoms.symptom_id", ondelete="RESTRICT", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    severity = Column(String(20))
+    duration_days = Column(Integer)
+    notes = Column(TEXT)
+ 
+
+
+===== RecordTests.py =====
+
+
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, UniqueConstraint
+from database.database import Base
+
+
+class MedicalRecordTest(Base):
+    __tablename__ = "medical_record_tests"
+    __table_args__ = (
+        UniqueConstraint("record_id", "test_id", "performed_at", name="uq_record_test_time"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(
+        Integer,
+        ForeignKey("MedicalRecords.recordID", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    test_id = Column(
+        Integer,
+        ForeignKey("medical_tests.test_id", ondelete="RESTRICT", onupdate="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    performed_at = Column(DateTime(timezone=True))
+    result = Column(Text)
+    status = Column(String(20), nullable=False, default="pending")  # pending / completed / cancelled
+
+
+===== symptoms.py =====
+
+from sqlalchemy import Column, Integer, String
+
+from database.database import Base
+
+class Symptom(Base):
+    __tablename__ = "symptoms"
+ 
+    symptom_id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False, unique=True)
+    code = Column(String(50))
