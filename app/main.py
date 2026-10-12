@@ -14,6 +14,7 @@ if APP_DIR not in sys.path:
 from database.database import Base, engine
 import models  # noqa: F401 - registers every model with Base.metadata.
 from routes.PatientRegRoutes import router as patient_registration_router
+from routes.Authentication import authRouter
 
 
 @asynccontextmanager
@@ -29,6 +30,7 @@ app = FastAPI(
 )
 
 app.include_router(patient_registration_router)
+app.include_router(authRouter)
 
 
 @app.get("/", tags=["health"])

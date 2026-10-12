@@ -1,9 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from models.AuthCredModel import AuthCredentials
 from models.PatientModel import Patient
+from models.AuthCredModel import AuthCredentials
 
 
 def get_patient_by_national_id(db: Session, encrypted_national_id: str) -> Patient | None:
@@ -39,3 +41,16 @@ def create_patient_with_credentials(
     db.commit()
     db.refresh(patient)
     return patient
+
+
+def get_user_credentials(
+    db: Session, encrypted_national_id: str
+) -> tuple[str, int] | None:
+    query = select(AuthCredentials.password, Patient.patientID).join(Patient,
+        Patient.patientID == AuthCredentials.patientID
+    ).where(Patient.nationalID == encrypted_national_id)
+    row = db.execute(query).one_or_none()
+    return (row[0], row[1]) if row is not None else None
+    
+    
+

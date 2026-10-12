@@ -1,6 +1,3 @@
-import hashlib
-import secrets
-
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -11,12 +8,7 @@ from repositories.patient_repository import (
 )
 from schemas.PatientModel import PatientRegistrationRequest
 from utilityfunctions.encryption import encrypt
-
-
-def _hash_password(password: str) -> str:
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 600_000)
-    return f"pbkdf2_sha256$600000${salt.hex()}${digest.hex()}"
+from utilityfunctions.passwords import hash_password
 
 
 def register_patient(
@@ -50,7 +42,7 @@ def register_patient(
             db,
             patient_fields=patient_fields,
             encrypted_national_id=encrypted_national_id,
-            password_hash=_hash_password(registration.password),
+            password_hash=hash_password(registration.password),
         )
     except IntegrityError as exc:
         db.rollback()

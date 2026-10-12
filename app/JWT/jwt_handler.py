@@ -6,12 +6,16 @@ from fastapi import HTTPException
 from jwt.exceptions import InvalidTokenError
 from dotenv import load_dotenv
 
+load_dotenv()
+
 SECRET_KEY_JWT = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 def create_access_token(user_id: str) -> str:
+    if not SECRET_KEY_JWT:
+        raise RuntimeError("JWT_SECRET_KEY must be configured")
     expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
@@ -25,6 +29,8 @@ def create_access_token(user_id: str) -> str:
 
 
 def verify_access_token(token: str) -> dict:
+    if not SECRET_KEY_JWT:
+        raise RuntimeError("JWT_SECRET_KEY must be configured")
     try:
         return jwt.decode(
             token,
