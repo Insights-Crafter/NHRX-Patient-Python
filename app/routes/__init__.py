@@ -1,0 +1,2 @@
+from PatientRegRoutes import router
+

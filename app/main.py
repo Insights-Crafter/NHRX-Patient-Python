@@ -1,3 +1,4 @@
+"""FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -11,7 +12,8 @@ if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
 from database.database import Base, engine
-import models  
+import models  # noqa: F401 - registers every model with Base.metadata.
+from routes.PatientRegRoutes import router as patient_registration_router
 
 
 @asynccontextmanager
@@ -25,6 +27,8 @@ app = FastAPI(
     title="NHRX Patient API",
     lifespan=lifespan,
 )
+
+app.include_router(patient_registration_router)
 
 
 @app.get("/", tags=["health"])
