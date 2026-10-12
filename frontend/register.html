@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8fc"><title>Create account · NHRX</title><link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+  <header class="topbar"><a class="brand" href="login.html"><span class="brand-mark">✚</span>NHRX <span>Patient Portal</span></a><a class="quiet-link" href="login.html">Sign in</a></header>
+  <main class="register-layout"><section class="register-heading"><div class="eyebrow">GET STARTED</div><h1>Your care journey starts here.</h1><p>Create your secure patient account. Your information is handled by the NHRX patient API.</p></section>
+    <section class="register-card"><div class="card-heading"><div><div class="eyebrow">PATIENT REGISTRATION</div><h2>Create your account</h2></div><span class="step-badge">01 <span>/ 01</span></span></div><p class="form-intro">Fields marked with <span class="required">*</span> are required.</p><div id="notice" class="notice" role="alert" hidden></div>
+      <form id="register-form"><div class="field-grid">
+        <div class="field"><label for="firstName">First name <span class="required">*</span></label><input id="firstName" name="firstName" autocomplete="given-name" required maxlength="100" placeholder="e.g. Ayesha"></div>
+        <div class="field"><label for="lastName">Last name <span class="required">*</span></label><input id="lastName" name="lastName" autocomplete="family-name" required maxlength="100" placeholder="e.g. Khan"></div>
+        <div class="field"><label for="nationalID">National ID <span class="required">*</span></label><input id="nationalID" name="nationalID" autocomplete="off" required maxlength="64" placeholder="Your national ID"></div>
+        <div class="field"><label for="phone">Phone <span class="required">*</span></label><input id="phone" name="phone" type="tel" autocomplete="tel" required minlength="11" maxlength="32" placeholder="e.g. 03001234567"></div>
+        <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com"></div>
+        <div class="field"><label for="date_of_birth">Date of birth</label><input id="date_of_birth" name="date_of_birth" type="date" autocomplete="bday"></div>
+        <div class="field"><label for="gender">Gender <span class="required">*</span></label><select id="gender" name="gender" required><option value="" disabled selected>Select gender</option><option>Female</option><option>Male</option><option>Other</option><option>Prefer not to say</option></select></div>
+        <div class="field"><label for="blood_group">Blood group <span class="required">*</span></label><select id="blood_group" name="blood_group" required><option value="" disabled selected>Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
+        <div class="field field-wide"><label for="password">Create password <span class="required">*</span></label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" placeholder="At least 8 characters"><span class="field-hint">Use at least 8 characters.</span></div>
+      </div><button class="button primary full" type="submit">Create patient account <span aria-hidden="true">→</span></button></form>
+      <p class="form-switch centered">Already registered? <a href="login.html">Sign in</a></p></section>
+  </main><footer class="page-footer">NHRX Patient Portal <span>·</span> Your care, connected</footer>
+  <script src="config.js"></script><script src="shared.js"></script><script>
+    const form = document.querySelector("#register-form"), notice = document.querySelector("#notice"), button = form.querySelector("button");
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault(); notice.hidden = true; setBusy(button, true, "Create patient account");
+      const payload = Object.fromEntries(new FormData(form));
+      for (const field of ["email", "date_of_birth"]) if (!payload[field]) payload[field] = null;
+      payload.nationalID = payload.nationalID.trim(); payload.firstName = payload.firstName.trim(); payload.lastName = payload.lastName.trim();
+      try {
+        await apiRequest("/patients/register", { method: "POST", body: JSON.stringify(payload) });
+        sessionStorage.setItem("nhrx_last_national_id", payload.nationalID);
+        window.location.assign("login.html?registered=1");
+      } catch (error) { showMessage(notice, error.message); }
+      finally { setBusy(button, false, "Create patient account"); }
+    });
+  </script>
+</body>
+</html>

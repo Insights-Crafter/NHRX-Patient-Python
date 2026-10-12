@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8fc"><title>Dashboard · NHRX</title><link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-page">
+  <header class="topbar dashboard-topbar"><a class="brand" href="home.html"><span class="brand-mark">✚</span>NHRX <span>Patient Portal</span></a><div class="user-menu"><div class="avatar" id="avatar">P</div><span id="header-name">Patient</span><button class="signout" id="signout">Sign out</button></div></header>
+  <main class="dashboard-main"><div class="dashboard-welcome"><div><div class="eyebrow">PATIENT OVERVIEW</div><h1>Good to see you, <span id="patient-first-name">there</span>.</h1><p>Here’s your personal health space. Your care team can help keep your information up to date.</p></div><div class="welcome-symbol" aria-hidden="true">✚</div></div>
+    <div id="notice" class="notice" role="alert" hidden></div>
+    <section class="summary-grid" aria-label="Patient summary"><article class="summary-card profile-summary"><div class="card-icon blue-icon">♙</div><div class="summary-label">PATIENT PROFILE</div><h2 id="patient-full-name">Loading…</h2><p>Patient ID <strong id="patient-id">—</strong></p><span class="status-chip"><i></i> Account active</span></article><article class="summary-card"><div class="card-icon green-icon">♡</div><div class="summary-label">HEALTH RECORDS</div><h2>Coming soon</h2><p>Your records will appear here as they become available.</p><div class="progress-track"><span></span></div></article><article class="summary-card"><div class="card-icon violet-icon">▦</div><div class="summary-label">APPOINTMENTS</div><h2>Stay tuned</h2><p>Appointment information will be available in a future update.</p><div class="soft-link">Appointment tools <span>→</span></div></article></section>
+    <section class="next-card"><div class="next-icon">✦</div><div><div class="eyebrow">YOUR NHRX SPACE</div><h2>A simpler way to stay connected to your care.</h2><p>This dashboard is ready for your patient profile. More health tools can be added as those APIs become available.</p></div><div class="next-decoration" aria-hidden="true">✚</div></section>
+    <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Signed in securely</footer></main>
+  <script src="config.js"></script><script src="shared.js"></script><script>
+    const token = requireToken(), notice = document.querySelector("#notice");
+    const loginSucceeded = sessionStorage.getItem("nhrx_login_succeeded") === "1";
+    document.querySelector("#signout").addEventListener("click", () => { localStorage.removeItem("nhrx_access_token"); window.location.replace("login.html"); });
+    if (token) apiRequest("/patients/me", { headers: { Authorization: `Bearer ${token}` } }).then((patient) => {
+      const firstName = patient.firstName || "Patient", fullName = [patient.firstName, patient.lastName].filter(Boolean).join(" ") || firstName;
+      document.querySelector("#patient-first-name").textContent = firstName;
+      document.querySelector("#patient-full-name").textContent = fullName;
+      document.querySelector("#header-name").textContent = fullName;
+      document.querySelector("#avatar").textContent = firstName.charAt(0).toUpperCase();
+      document.querySelector("#patient-id").textContent = `#${patient.patientID}`;
+      if (loginSucceeded) {
+        showMessage(notice, `You signed in successfully. Welcome, ${firstName}!`, "success");
+        sessionStorage.removeItem("nhrx_login_succeeded");
+      }
+    }).catch((error) => {
+      localStorage.removeItem("nhrx_access_token");
+      showMessage(notice, `${error.message} Please sign in again.`);
+      setTimeout(() => window.location.replace("login.html"), 1800);
+    });
+  </script>
+</body>
+</html>

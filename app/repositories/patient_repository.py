@@ -16,6 +16,10 @@ def get_patient_by_national_id(db: Session, encrypted_national_id: str) -> Patie
     )
 
 
+def get_patient_by_id(db: Session, patient_id: int) -> Patient | None:
+    return db.query(Patient).filter(Patient.patientID == patient_id).first()
+
+
 def create_patient_with_credentials(
     db: Session,
     *,

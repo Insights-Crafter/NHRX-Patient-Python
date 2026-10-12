@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Support both ``uvicorn main:app --app-dir app`` and ``uvicorn app.main:app``.
 APP_DIR = str(Path(__file__).resolve().parent)
@@ -27,6 +28,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="NHRX Patient API",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 app.include_router(patient_registration_router)
