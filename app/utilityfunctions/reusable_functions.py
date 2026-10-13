@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials
 
 from JWT.jwt_handler import verify_access_token
 
-def ExtractPatientID(
-    credentials: HTTPAuthorizationCredentials | None,
-) -> int:
+
+def extract_patient_id(credentials: HTTPAuthorizationCredentials | None) -> int:
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

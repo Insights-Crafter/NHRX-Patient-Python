@@ -1,12 +1,11 @@
 from datetime import datetime
 
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from models.AuthCredModel import AuthCredentials
 from models.PatientModel import Patient
-from models.AuthCredModel import AuthCredentials
-
+from models.PatientAddress import PatientAddress
 
 def get_patient_by_national_id(db: Session, encrypted_national_id: str) -> Patient | None:
     return (
@@ -50,11 +49,38 @@ def create_patient_with_credentials(
 def get_user_credentials(
     db: Session, encrypted_national_id: str
 ) -> tuple[str, int] | None:
-    query = select(AuthCredentials.password, Patient.patientID).join(Patient,
-        Patient.patientID == AuthCredentials.patientID
-    ).where(Patient.nationalID == encrypted_national_id)
+    query = (
+        select(AuthCredentials.password, Patient.patientID)
+        .join(Patient, Patient.patientID == AuthCredentials.patientID)
+        .where(Patient.nationalID == encrypted_national_id)
+    )
     row = db.execute(query).one_or_none()
     return (row[0], row[1]) if row is not None else None
-    
-    
 
+
+def update_address(
+    db: Session, patient_id: int, address_fields: dict[str, str | None]
+) -> PatientAddress | None:
+    """Update the patient's first address row and return it, or None if absent."""
+    address = db.execute(
+        select(PatientAddress)
+        .where(PatientAddress.patientID == patient_id)
+        .order_by(PatientAddress.AddressID)
+        .limit(1)
+    ).scalar_one_or_none()
+
+    if address is None:
+        return None
+
+    result = db.execute(
+        update(PatientAddress)
+        .where(PatientAddress.AddressID == address.AddressID)
+        .values(**address_fields)
+    )
+    if result.rowcount == 0:
+        db.rollback()
+        return None
+
+    db.commit()
+    db.refresh(address)
+    return address
