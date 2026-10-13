@@ -7,6 +7,7 @@ from models.AuthCredModel import AuthCredentials
 from models.PatientModel import Patient
 from models.PatientAddress import PatientAddress
 
+
 def get_patient_by_national_id(db: Session, encrypted_national_id: str) -> Patient | None:
     return (
         db.query(Patient)
@@ -84,3 +85,32 @@ def update_address(
     db.commit()
     db.refresh(address)
     return address
+
+def update_contact(
+    db: Session,
+    encrypted_fields: dict[str, str | None],
+    patient_id: int,
+) -> Patient | None:
+    """Update a patient's encrypted contact fields and return the patient."""
+    patient = db.execute(
+        select(Patient).where(Patient.patientID == patient_id)
+    ).scalar_one_or_none()
+    if patient is None:
+        return None
+
+    try:
+        result = db.execute(
+            update(Patient)
+            .where(Patient.patientID == patient_id)
+            .values(**encrypted_fields)
+        )
+        if result.rowcount == 0:
+            db.rollback()
+            return None
+
+        db.commit()
+        db.refresh(patient)
+        return patient
+    except Exception:
+        db.rollback()
+        raise

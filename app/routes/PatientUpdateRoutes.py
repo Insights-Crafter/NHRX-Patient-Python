@@ -2,9 +2,13 @@ from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from controllers.patient_controller import update_current_patient_address
+from controllers.patient_controller import (
+    update_current_patient_address,
+    update_current_patient_contact,
+)
 from database.database import get_db
 from schemas.AddressUpdate import AddressUpdateRequest, UserAddressUpdateResponse
+from schemas.ContactUpdate import ContactUpdateRequest, UserContactUpdateResponse
 
 bearer_scheme = HTTPBearer(auto_error=False)
 router = APIRouter(prefix="/patients", tags=["patients"])
@@ -20,4 +24,17 @@ def update_address_route(
     return UserAddressUpdateResponse(
         message="Patient address updated successfully",
         data=address,
+    )
+
+
+@router.patch("/me/updateContact", response_model=UserContactUpdateResponse)
+def update_contact_route(
+    request: ContactUpdateRequest,
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> UserContactUpdateResponse:
+    contact = update_current_patient_contact(credentials, db, request)
+    return UserContactUpdateResponse(
+        message="Patient contact information updated successfully",
+        data=contact,
     )

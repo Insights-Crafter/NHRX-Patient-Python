@@ -10,6 +10,9 @@ from services.patient_registration import register_patient
 from utilityfunctions.encryption import decrypt
 from utilityfunctions.reusable_functions import extract_patient_id
 
+from schemas.ContactUpdate import ContactUpdateRequest, ContactUpdateResponse
+from services.patient_contact import update_patient_contact
+
 
 def register_patient_endpoint(
     registration: PatientRegistrationRequest, db: Session
@@ -44,3 +47,12 @@ def update_current_patient_address(
 ) -> AddressUpdateResponse:
     patient_id = extract_patient_id(credentials)
     return update_patient_address(db, patient_id, request)
+
+def update_current_patient_contact(
+    credentials: HTTPAuthorizationCredentials | None,
+    db: Session,
+    request: ContactUpdateRequest,
+) -> ContactUpdateResponse:
+    patient_id = extract_patient_id(credentials)
+    return update_patient_contact(db, patient_id, request)
+
