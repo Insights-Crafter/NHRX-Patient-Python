@@ -3,6 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from repositories.patient_repository import (
+    create_patient_address,
     create_patient_with_credentials,
     get_patient_by_national_id,
 )
@@ -44,6 +45,14 @@ def register_patient(
             encrypted_national_id=encrypted_national_id,
             password_hash=hash_password(registration.password),
         )
+        if registration.address is not None:
+            address_fields = {
+                field: encrypt(value.strip(), field)
+                for field, value in registration.address.model_dump().items()
+            }
+            create_patient_address(db, patient.patientID, address_fields)
+        db.commit()
+        db.refresh(patient)
     except IntegrityError as exc:
         db.rollback()
         raise HTTPException(

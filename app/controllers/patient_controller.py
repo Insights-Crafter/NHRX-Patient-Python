@@ -5,7 +5,10 @@ from sqlalchemy.orm import Session
 from repositories.patient_repository import get_patient_by_id
 from schemas.AddressUpdate import AddressUpdateRequest, AddressUpdateResponse
 from schemas.PatientModel import PatientRegistrationRequest, PatientRegistrationResponse
-from services.patient_address import update_patient_address
+from services.patient_address import (
+    get_patientt_address,
+    update_patient_address,
+)
 from services.patient_registration import register_patient
 from utilityfunctions.encryption import decrypt
 from utilityfunctions.reusable_functions import extract_patient_id
@@ -47,6 +50,15 @@ def update_current_patient_address(
 ) -> AddressUpdateResponse:
     patient_id = extract_patient_id(credentials)
     return update_patient_address(db, patient_id, request)
+
+
+def get_current_patient_address(
+    credentials: HTTPAuthorizationCredentials | None,
+    db: Session,
+) -> AddressUpdateResponse:
+    patient_id = extract_patient_id(credentials)
+    return get_patientt_address(db, patient_id)
+
 
 def update_current_patient_contact(
     credentials: HTTPAuthorizationCredentials | None,

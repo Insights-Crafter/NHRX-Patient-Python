@@ -18,6 +18,13 @@
         <div class="field"><label for="gender">Gender <span class="required">*</span></label><select id="gender" name="gender" required><option value="" disabled selected>Select gender</option><option>Female</option><option>Male</option><option>Other</option><option>Prefer not to say</option></select></div>
         <div class="field"><label for="blood_group">Blood group <span class="required">*</span></label><select id="blood_group" name="blood_group" required><option value="" disabled selected>Select blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></div>
         <div class="field field-wide"><label for="password">Create password <span class="required">*</span></label><input id="password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" placeholder="At least 8 characters"><span class="field-hint">Use at least 8 characters.</span></div>
+        <div class="field field-wide"><h3 class="form-section-title">Home address</h3><p class="field-hint">Your address is saved with your patient account.</p></div>
+        <div class="field"><label for="Area">Area <span class="required">*</span></label><input id="Area" name="Area" required maxlength="200" autocomplete="address-level3"></div>
+        <div class="field"><label for="HouseNumber">House / unit number <span class="required">*</span></label><input id="HouseNumber" name="HouseNumber" required maxlength="100" autocomplete="address-line2"></div>
+        <div class="field"><label for="Province">Province <span class="required">*</span></label><input id="Province" name="Province" required maxlength="100" autocomplete="address-level1"></div>
+        <div class="field"><label for="City">City <span class="required">*</span></label><input id="City" name="City" required maxlength="100" autocomplete="address-level2"></div>
+        <div class="field"><label for="Street">Street <span class="required">*</span></label><input id="Street" name="Street" required maxlength="200" autocomplete="address-line1"></div>
+        <div class="field"><label for="Block">Block <span class="required">*</span></label><input id="Block" name="Block" required maxlength="100"></div>
       </div><button class="button primary full" type="submit">Create patient account <span aria-hidden="true">→</span></button></form>
       <p class="form-switch centered">Already registered? <a href="login.html">Sign in</a></p></section>
   </main><footer class="page-footer">NHRX Patient Portal <span>·</span> Your care, connected</footer>
@@ -25,7 +32,10 @@
     const form = document.querySelector("#register-form"), notice = document.querySelector("#notice"), button = form.querySelector("button");
     form.addEventListener("submit", async (event) => {
       event.preventDefault(); notice.hidden = true; setBusy(button, true, "Create patient account");
-      const payload = Object.fromEntries(new FormData(form));
+      const values = Object.fromEntries(new FormData(form));
+      const address = Object.fromEntries(["Area", "HouseNumber", "Province", "City", "Street", "Block"].map((field) => [field, values[field].trim()]));
+      const payload = Object.fromEntries(Object.entries(values).filter(([key]) => !Object.hasOwn(address, key)));
+      payload.address = address;
       for (const field of ["email", "date_of_birth"]) if (!payload[field]) payload[field] = null;
       payload.nationalID = payload.nationalID.trim(); payload.firstName = payload.firstName.trim(); payload.lastName = payload.lastName.trim();
       try {

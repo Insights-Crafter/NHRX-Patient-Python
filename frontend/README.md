@@ -1,6 +1,6 @@
 # NHRX patient frontend
 
-Three page patient portal: registration, sign in, and a post-login dashboard. It uses the FastAPI endpoints `POST /patients/register`, `POST /auth/login`, and authenticated `GET /patients/me`.
+Three page patient portal: registration, sign in, and a post-login dashboard. Registration submits patient details and address together to `POST /patients/register`. The API inserts the patient first, uses the generated `patientID` for the address row, and commits both in one transaction. The dashboard loads the authenticated profile and address with `GET /patients/me` and `GET /patients/me/address`; address edits use the existing authenticated `PATCH /patients/me/updateAdress` endpoint.
 
 ## Run locally
 

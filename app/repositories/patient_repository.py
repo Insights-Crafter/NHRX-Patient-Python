@@ -42,9 +42,17 @@ def create_patient_with_credentials(
         password=password_hash,
     )
     db.add(credential)
-    db.commit()
-    db.refresh(patient)
     return patient
+
+
+def create_patient_address(
+    db: Session, patient_id: int, encrypted_address_fields: dict[str, str | None]
+) -> PatientAddress:
+    """Add an address row linked to an already-flushed patient."""
+    address = PatientAddress(patientID=patient_id, **encrypted_address_fields)
+    db.add(address)
+    db.flush()
+    return address
 
 
 def get_user_credentials(
@@ -86,6 +94,16 @@ def update_address(
     db.refresh(address)
     return address
 
+
+def get_patient_address(db: Session, patient_id: int) -> PatientAddress | None:
+    """Return the patient's first address row, or None if it is absent."""
+    return db.execute(
+        select(PatientAddress)
+        .where(PatientAddress.patientID == patient_id)
+        .order_by(PatientAddress.AddressID)
+        .limit(1)
+    ).scalar_one_or_none()
+
 def update_contact(
     db: Session,
     encrypted_fields: dict[str, str | None],
@@ -114,3 +132,12 @@ def update_contact(
     except Exception:
         db.rollback()
         raise
+
+
+def getPatientAddress(db:Session, patientID:int):
+    result = db.execute(select(PatientAddress.Area,PatientAddress.Block,
+                                PatientAddress.City,
+                                PatientAddress.Province, PatientAddress.Street,
+                                PatientAddress.HouseNumber).where(PatientAddress.patientID==patientID))
+    address = result.mappings().one_or_none()
+    return dict(address) if address is not None else None
