@@ -6,12 +6,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev libpq5 \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
-    && apt-get purge -y gcc libpq-dev \
+    && apt-get purge -y build-essential libpq-dev \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

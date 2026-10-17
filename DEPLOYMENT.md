@@ -144,7 +144,7 @@ docker compose exec frontend nginx -t
 docker compose exec frontend wget -S -O- http://backend:8000/
 ```
 
-- **Container exits / import error:** inspect backend logs; confirm Compose builds from repository root and the command remains `app.main:app`. Check all required packages are pinned in `requirements.txt` and rebuild backend.
+- **Container exits / import error:** inspect backend logs; confirm Compose builds from repository root and the command remains `app.main:app`. Check all required packages are pinned in `requirements.txt` and rebuild backend. If `psycopg2` compilation reports missing `stdlib.h`, ensure the backend build installs `build-essential` and `libpq-dev` before `pip install`.
 - **Missing environment variable:** check names (not values) against `.env.example`; ensure `.env` exists on EC2, has mode `600`, and `docker compose config` succeeds. Never share its values in an issue/log.
 - **Database connection fails:** verify `DB_HOST=host.docker.internal`, Compose `extra_hosts`, PostgreSQL `listen_addresses`, the Compose subnet rule in `pg_hba.conf`, DB name/user/password, and host firewall. Check backend logs. Do not publish or allow TCP 5432 from the public internet.
 - **HTTP 404:** verify exact route spelling and methods above; the existing update route uses the spelling `/patients/me/updateAdress`. Browser URLs prepend `/api`, while FastAPI routes do not.
