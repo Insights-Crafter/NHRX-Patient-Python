@@ -1,4 +1,4 @@
-const API_BASE = (window.NHRX_API_BASE || "http://127.0.0.1:8000").replace(/\/$/, "");
+const API_BASE = (window.NHRX_API_BASE || "/api").replace(/\/$/, "");
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, {

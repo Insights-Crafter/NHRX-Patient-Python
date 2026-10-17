@@ -1,11 +1,11 @@
 """FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
+import os
 from pathlib import Path
 import sys
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 # Support both ``uvicorn main:app --app-dir app`` and ``uvicorn app.main:app``.
 APP_DIR = str(Path(__file__).resolve().parent)
@@ -22,22 +22,15 @@ from routes.Authentication import authRouter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create database tables before serving requests."""
-    Base.metadata.create_all(bind=engine)
+    """Optionally create missing tables for local development."""
+    if os.getenv("CREATE_DB_TABLES", "false").strip().lower() in {"1", "true", "yes"}:
+        Base.metadata.create_all(bind=engine)
     yield
 
 
 app = FastAPI(
     title="NHRX Patient API",
     lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
-    allow_credentials=False,
-    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
 )
 
 app.include_router(patient_registration_router)
