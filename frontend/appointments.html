@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8f6"><title>Find a doctor | NHRX Patient Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-page">
+  <header class="topbar dashboard-topbar">
+    <a class="brand" href="home.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a>
+    <nav class="main-nav" aria-label="Patient account"><a data-page="home.html" href="home.html">Overview</a><a data-page="appointments.html" href="appointments.html">Appointments</a><a data-page="contact.html" href="contact.html">Contact</a><a data-page="address.html" href="address.html">Address</a></nav>
+    <div class="user-menu"><div class="avatar">P</div><span>My account</span><button class="signout" type="button" onclick="signOut()">Sign out</button></div>
+  </header>
+  <main class="directory-main">
+    <a class="back-link" href="home.html">← <span>Back to overview</span></a>
+    <section class="directory-hero">
+      <div><div class="eyebrow">APPOINTMENTS</div><h1>Find the right doctor for you.</h1><p>Browse doctors by name, speciality, or city. Choose a doctor to continue toward booking.</p></div>
+      <div class="directory-hero-art" aria-hidden="true">
+        <span class="hero-ring ring-a"></span><span class="hero-ring ring-b"></span>
+        <svg viewBox="0 0 96 96" role="presentation"><circle cx="41" cy="40" r="21"/><path d="m57 56 19 19"/><path d="M34 43c1-9 7-15 16-16-1 9-7 15-16 16Z"/><path d="m36 40 10-10"/></svg>
+      </div>
+    </section>
+
+    <section class="directory-panel" aria-labelledby="doctor-search-title">
+      <div class="directory-panel-heading"><div><div class="eyebrow">DOCTOR DIRECTORY</div><h2 id="doctor-search-title">Explore our doctors</h2></div><span class="directory-secure"><span aria-hidden="true">●</span> Patient portal</span></div>
+      <form id="doctor-filter-form" class="doctor-filters">
+        <label class="search-field" for="search"><span class="search-glyph" aria-hidden="true">⌕</span><input id="search" name="search" type="search" maxlength="120" placeholder="Search by doctor name"></label>
+        <label class="select-field"><span class="sr-only">Filter by speciality</span><select id="speciality_id" name="speciality_id"><option value="">All specialities</option></select></label>
+        <label class="select-field"><span class="sr-only">Filter by city</span><select id="city" name="city"><option value="">All cities</option></select></label>
+        <button class="button primary filter-submit" type="submit">Search doctors <span aria-hidden="true">→</span></button>
+        <button class="clear-filters" id="clear-filters" type="button">Clear filters</button>
+      </form>
+      <div class="directory-meta"><p id="results-summary" aria-live="polite">Loading doctors…</p><p id="page-summary"></p></div>
+      <div id="loading-state" class="doctor-card-grid" aria-hidden="true">
+        <div class="doctor-skeleton"></div><div class="doctor-skeleton"></div><div class="doctor-skeleton"></div>
+      </div>
+      <div id="doctor-grid" class="doctor-card-grid" aria-live="polite"></div>
+      <section id="empty-state" class="empty-state" hidden aria-live="polite">
+        <div class="empty-art" aria-hidden="true">
+          <span class="empty-orbit orbit-left"></span><span class="empty-orbit orbit-right"></span>
+          <svg viewBox="0 0 120 120" role="presentation">
+            <circle class="lens" cx="52" cy="50" r="25"/><path class="handle" d="m70 69 21 21"/>
+            <path class="leaf" d="M43 55c1-12 9-20 21-21-1 12-9 20-21 21Z"/><path class="leaf-vein" d="m47 51 12-13"/>
+            <path class="small-line" d="M26 82h24"/><path class="small-line" d="M71 27h12"/>
+          </svg>
+        </div>
+        <div class="eyebrow">A QUIETER SEARCH</div><h2 id="empty-title">No doctors found</h2>
+        <p id="empty-copy">Try a different name, speciality, or city. You can also clear your filters to see everyone.</p>
+        <button class="button secondary" id="empty-clear" type="button">Clear all filters</button>
+      </section>
+      <section id="error-state" class="directory-error" hidden>
+        <div class="error-emblem" aria-hidden="true">!</div><div><h2>We couldn’t load the doctor list</h2><p id="error-copy">Check that the patient API is running at localhost, then try again.</p></div><button class="button secondary" id="retry-doctors" type="button">Try again</button>
+      </section>
+      <nav class="directory-pagination" aria-label="Doctor results pages"><button id="previous-page" class="button secondary" type="button">← Previous</button><span id="pagination-label">Page 1</span><button id="next-page" class="button secondary" type="button">Next →</button></nav>
+    </section>
+
+    <section id="selected-doctor" class="selected-doctor" hidden aria-live="polite">
+      <div class="selected-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 17c0-6 4-10 10-10s10 4 10 10-4 10-10 10"/><path d="m21 8 5-1-1 5"/></svg></div>
+      <div class="selected-copy"><div class="eyebrow">DOCTOR SELECTED</div><h2 id="selected-name"></h2><p>Doctor search is connected. Appointment availability and confirmation APIs are not yet available, so no booking has been made.</p></div>
+      <button id="remove-selection" class="clear-filters" type="button">Remove selection</button>
+    </section>
+    <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Find care near you</footer>
+  </main>
+  <script src="config.js"></script><script src="shared.js"></script><script>
+    const token = requireToken();
+    setActiveNavigation();
+    const form = document.querySelector("#doctor-filter-form");
+    const doctorGrid = document.querySelector("#doctor-grid");
+    const loadingState = document.querySelector("#loading-state");
+    const emptyState = document.querySelector("#empty-state");
+    const errorState = document.querySelector("#error-state");
+    const selectedPanel = document.querySelector("#selected-doctor");
+    const pageSize = 12;
+
+    function readQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const speciality = Number(params.get("speciality_id"));
+      const offset = Number(params.get("offset"));
+      const doctorId = Number(params.get("doctor_id"));
+      return {
+        search: params.get("search") || "",
+        speciality_id: Number.isInteger(speciality) && speciality > 0 ? speciality : "",
+        city: params.get("city") || "",
+        limit: pageSize,
+        offset: Number.isInteger(offset) && offset > 0 ? Math.floor(offset / pageSize) * pageSize : 0,
+        doctor_id: Number.isInteger(doctorId) && doctorId > 0 ? doctorId : null,
+      };
+    }
+
+    let state = readQuery();
+
+    function updateUrl({ push = true } = {}) {
+      const params = new URLSearchParams();
+      if (state.search) params.set("search", state.search);
+      if (state.speciality_id) params.set("speciality_id", String(state.speciality_id));
+      if (state.city) params.set("city", state.city);
+      if (state.offset) params.set("offset", String(state.offset));
+      if (state.doctor_id) params.set("doctor_id", String(state.doctor_id));
+      const query = params.toString();
+      const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}`;
+      if (push) window.history.pushState({}, "", nextUrl);
+      else window.history.replaceState({}, "", nextUrl);
+    }
+
+    function applyStateToForm() {
+      form.elements.search.value = state.search;
+      form.elements.speciality_id.value = state.speciality_id || "";
+      form.elements.city.value = state.city;
+    }
+
+    async function loadFilterOptions() {
+      const options = await apiRequest("/doctors/filters");
+      const specialitySelect = form.elements.speciality_id;
+      const citySelect = form.elements.city;
+      for (const speciality of options.specialities || []) {
+        specialitySelect.add(new Option(speciality.specialityName, speciality.specialityID));
+      }
+      for (const city of options.cities || []) citySelect.add(new Option(city, city));
+      applyStateToForm();
+    }
+
+    function makeDoctorCard(doctor) {
+      const card = document.createElement("article");
+      card.className = "doctor-card";
+      const initials = (doctor.Name || "D").trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+      const head = document.createElement("div");
+      head.className = "doctor-card-head";
+      const avatar = document.createElement("div");
+      avatar.className = "doctor-avatar";
+      avatar.textContent = initials || "D";
+      const credential = document.createElement("span");
+      credential.className = "doctor-experience";
+      credential.textContent = doctor.YearsofExperience == null ? "Doctor" : `${doctor.YearsofExperience} years’ experience`;
+      head.append(avatar, credential);
+
+      const name = document.createElement("h3");
+      name.textContent = doctor.Name || "Doctor name unavailable";
+      const speciality = document.createElement("p");
+      speciality.className = "doctor-speciality";
+      speciality.textContent = doctor.specialityName || "Speciality not listed";
+      const location = document.createElement("p");
+      location.className = "doctor-location";
+      location.innerHTML = '<span aria-hidden="true">⌖</span>';
+      location.append(document.createTextNode(` ${doctor.hospitalName || "Hospital not listed"}${doctor.City ? ` · ${doctor.City}` : ""}`));
+
+      const footer = document.createElement("div");
+      footer.className = "doctor-card-footer";
+      const limit = document.createElement("span");
+      limit.textContent = doctor.DailyPatientLimit == null ? "Appointments available" : `Daily capacity: ${doctor.DailyPatientLimit}`;
+      const choose = document.createElement("button");
+      choose.className = "button secondary doctor-select-button";
+      choose.type = "button";
+      choose.textContent = Number(state.doctor_id) === doctor.doctorID ? "Selected" : "Choose doctor";
+      choose.setAttribute("aria-pressed", Number(state.doctor_id) === doctor.doctorID ? "true" : "false");
+      choose.addEventListener("click", () => selectDoctor(doctor));
+      footer.append(limit, choose);
+      card.append(head, name, speciality, location, footer);
+      return card;
+    }
+
+    function selectDoctor(doctor) {
+      state.doctor_id = doctor.doctorID;
+      document.querySelector("#selected-name").textContent = doctor.Name || "Selected doctor";
+      selectedPanel.hidden = false;
+      updateUrl();
+      loadDoctors({ updateHistory: false });
+      selectedPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    async function loadDoctors({ updateHistory = false } = {}) {
+      if (updateHistory) updateUrl();
+      loadingState.hidden = false;
+      doctorGrid.replaceChildren();
+      emptyState.hidden = true;
+      errorState.hidden = true;
+      document.querySelector(".directory-pagination").hidden = true;
+      document.querySelector("#results-summary").textContent = "Finding doctors…";
+      const params = new URLSearchParams({ limit: String(pageSize), offset: String(state.offset) });
+      if (state.search) params.set("search", state.search);
+      if (state.speciality_id) params.set("speciality_id", String(state.speciality_id));
+      if (state.city) params.set("city", state.city);
+      try {
+        const doctors = await apiRequest(`/doctors?${params.toString()}`);
+        loadingState.hidden = true;
+        const records = Array.isArray(doctors) ? doctors : [];
+        document.querySelector("#results-summary").textContent = records.length
+          ? `${records.length} doctor${records.length === 1 ? "" : "s"} on this page`
+          : "No matching doctors";
+        if (!records.length) {
+          emptyState.hidden = false;
+          document.querySelector(".directory-pagination").hidden = state.offset === 0;
+          document.querySelector("#pagination-label").textContent = `Page ${Math.floor(state.offset / pageSize) + 1}`;
+          document.querySelector("#previous-page").disabled = state.offset === 0;
+          document.querySelector("#next-page").disabled = true;
+          return;
+        }
+        doctorGrid.append(...records.map(makeDoctorCard));
+        const pageNumber = Math.floor(state.offset / pageSize) + 1;
+        document.querySelector("#page-summary").textContent = `Page ${pageNumber}`;
+        document.querySelector(".directory-pagination").hidden = false;
+        document.querySelector("#pagination-label").textContent = `Page ${pageNumber}`;
+        document.querySelector("#previous-page").disabled = state.offset === 0;
+        document.querySelector("#next-page").disabled = records.length < pageSize;
+        document.querySelector("#next-page").dataset.hasNext = records.length === pageSize ? "true" : "false";
+        const chosen = records.find((doctor) => doctor.doctorID === state.doctor_id);
+        if (chosen) {
+          document.querySelector("#selected-name").textContent = chosen.Name || "Selected doctor";
+          selectedPanel.hidden = false;
+        }
+      } catch (error) {
+        loadingState.hidden = true;
+        errorState.hidden = false;
+        document.querySelector("#error-copy").textContent = error.message;
+        document.querySelector("#results-summary").textContent = "Doctor list unavailable";
+        await showFeedback("Could not load doctors from the patient API.", "error");
+      }
+    }
+
+    function clearFilters() {
+      state = { search: "", speciality_id: "", city: "", limit: pageSize, offset: 0, doctor_id: null };
+      applyStateToForm();
+      selectedPanel.hidden = true;
+      updateUrl();
+      loadDoctors();
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      state.search = form.elements.search.value.trim();
+      state.speciality_id = form.elements.speciality_id.value ? Number(form.elements.speciality_id.value) : "";
+      state.city = form.elements.city.value;
+      state.offset = 0;
+      state.doctor_id = null;
+      selectedPanel.hidden = true;
+      loadDoctors({ updateHistory: true });
+    });
+    document.querySelector("#clear-filters").addEventListener("click", clearFilters);
+    document.querySelector("#empty-clear").addEventListener("click", clearFilters);
+    document.querySelector("#retry-doctors").addEventListener("click", () => loadDoctors());
+    document.querySelector("#remove-selection").addEventListener("click", () => {
+      state.doctor_id = null;
+      selectedPanel.hidden = true;
+      updateUrl();
+      loadDoctors({ updateHistory: false });
+    });
+    document.querySelector("#previous-page").addEventListener("click", () => {
+      state.offset = Math.max(0, state.offset - pageSize);
+      loadDoctors({ updateHistory: true });
+    });
+    document.querySelector("#next-page").addEventListener("click", () => {
+      if (document.querySelector("#next-page").dataset.hasNext !== "true") return;
+      state.offset += pageSize;
+      loadDoctors({ updateHistory: true });
+    });
+    window.addEventListener("popstate", async () => {
+      state = readQuery();
+      applyStateToForm();
+      selectedPanel.hidden = !state.doctor_id;
+      if (state.doctor_id) document.querySelector("#selected-name").textContent = "Selected doctor";
+      await loadDoctors();
+    });
+
+    (async function initializeDirectory() {
+      if (!token) return;
+      try { await loadFilterOptions(); }
+      catch (error) { showFeedback(`Could not load speciality and city filters: ${error.message}`, "error"); }
+      applyStateToForm();
+      await loadDoctors();
+    })();
+  </script>
+</body>
+</html>

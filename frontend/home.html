@@ -2,57 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f8fc"><title>Dashboard · NHRX</title><link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#f5f8f6"><title>Patient dashboard | NHRX</title><link rel="stylesheet" href="styles.css">
 </head>
 <body class="dashboard-page">
-  <header class="topbar dashboard-topbar"><a class="brand" href="home.html"><span class="brand-mark">☾</span>NHRX <span>Patient Portal</span></a><div class="user-menu"><div class="avatar" id="avatar">P</div><span id="header-name">Patient</span><button class="signout" id="signout">Sign out</button></div></header>
-  <main class="dashboard-main"><div class="dashboard-welcome"><div><div class="eyebrow">PATIENT OVERVIEW</div><h1>Good to see you, <span id="patient-first-name">there</span>.</h1><p>Here’s your personal health space. Your care team can help keep your information up to date.</p></div><div class="welcome-symbol" aria-hidden="true">☾</div></div>
-    <div id="notice" class="notice" role="alert" hidden></div>
-    <section class="summary-grid" aria-label="Patient summary"><article class="summary-card profile-summary"><div class="card-icon blue-icon">♙</div><div class="summary-label">PATIENT PROFILE</div><h2 id="patient-full-name">Loading…</h2><p>Patient ID <strong id="patient-id">—</strong></p><span class="status-chip"><i></i> Account active</span></article><article class="summary-card"><div class="card-icon green-icon">♡</div><div class="summary-label">HEALTH RECORDS</div><h2>Coming soon</h2><p>Your records will appear here as they become available.</p><div class="progress-track"><span></span></div></article><article class="summary-card"><div class="card-icon violet-icon">▦</div><div class="summary-label">APPOINTMENTS</div><h2>Stay tuned</h2><p>Appointment information will be available in a future update.</p><div class="soft-link">Appointment tools <span>→</span></div></article></section>
-    <section class="next-card"><div class="next-icon">✦</div><div><div class="eyebrow">YOUR NHRX SPACE</div><h2>A simpler way to stay connected to your care.</h2><p>This dashboard is ready for your patient profile. More health tools can be added as those APIs become available.</p></div><div class="next-decoration" aria-hidden="true">☾</div></section>
-    <section class="address-card"><div><div class="eyebrow">YOUR DETAILS</div><h2>Home address</h2><p>Update the address saved to your patient account.</p></div><div id="address-notice" class="notice" role="alert" hidden></div><form id="address-form"><div class="field-grid">
-      <div class="field"><label for="Area">Area</label><input id="Area" name="Area" maxlength="200"></div>
-      <div class="field"><label for="HouseNumber">House / unit number</label><input id="HouseNumber" name="HouseNumber" maxlength="100"></div>
-      <div class="field"><label for="Province">Province</label><input id="Province" name="Province" maxlength="100"></div>
-      <div class="field"><label for="City">City</label><input id="City" name="City" maxlength="100"></div>
-      <div class="field"><label for="Street">Street</label><input id="Street" name="Street" maxlength="200"></div>
-      <div class="field"><label for="Block">Block</label><input id="Block" name="Block" maxlength="100"></div>
-    </div><button class="button primary" id="save-address" type="submit">Save address</button></form></section>
-    <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Signed in securely</footer></main>
+  <header class="topbar dashboard-topbar">
+    <a class="brand" href="home.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a>
+    <nav class="main-nav" aria-label="Patient account"><a data-page="home.html" href="home.html">Overview</a><a data-page="appointments.html" href="appointments.html">Appointments</a><a data-page="contact.html" href="contact.html">Contact</a><a data-page="address.html" href="address.html">Address</a></nav>
+    <div class="user-menu"><div class="avatar" id="avatar">P</div><span id="header-name">Patient</span><button class="signout" id="signout" type="button">Sign out</button></div>
+  </header>
+  <main class="dashboard-main">
+    <section class="dashboard-welcome"><div><div class="eyebrow">PATIENT OVERVIEW</div><h1>Welcome, <span id="patient-first-name">there</span>.</h1><p>Your personal NHRX space for managing the details connected to your care.</p></div><div class="welcome-symbol"><img src="nhrx-mark.svg" alt=""></div></section>
+    <section class="section-block"><div class="section-heading"><div><div class="eyebrow">ACCOUNT TOOLS</div><h2>Manage your details</h2></div><p>Choose a section to view or update your information.</p></div>
+      <div class="action-grid">
+        <a class="action-card" href="contact.html"><span class="action-icon teal-icon" aria-hidden="true">@</span><span class="action-copy"><strong>Contact details</strong><small>Update your phone number and email</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
+        <a class="action-card" href="address.html"><span class="action-icon gold-icon" aria-hidden="true">⌂</span><span class="action-copy"><strong>Home address</strong><small>Review or update your address</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
+        <a class="action-card" href="appointments.html"><span class="action-icon violet-icon" aria-hidden="true">◷</span><span class="action-copy"><strong>Book an appointment</strong><small>Find doctors by name, speciality, or city</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
+      </div>
+    </section>
+    <section class="section-block"><div class="section-heading"><div><div class="eyebrow">YOUR ACCOUNT</div><h2>Patient profile</h2></div></div>
+      <div class="summary-grid">
+        <article class="summary-card profile-summary"><div class="card-icon teal-icon">✦</div><div class="summary-label">PATIENT PROFILE</div><h3 id="patient-full-name">Loading profile…</h3><p>Patient ID <strong id="patient-id">—</strong></p><span class="status-chip"><i></i> Account active</span></article>
+        <article class="summary-card"><div class="card-icon green-icon">＋</div><div class="summary-label">HEALTH RECORDS</div><h3>Coming soon</h3><p>Your records will appear here as they become available.</p><div class="progress-track"><span></span></div></article>
+        <article class="summary-card"><div class="card-icon violet-icon">◷</div><div class="summary-label">APPOINTMENTS</div><h3>Coming soon</h3><p>Appointment information will be available in a future update.</p><div class="progress-track violet-track"><span></span></div></article>
+      </div>
+    </section>
+    <section class="care-note"><span class="care-note-mark"><img src="nhrx-mark.svg" alt=""></span><div><div class="eyebrow">NHRX PATIENT PORTAL</div><h2>Your care, connected.</h2><p>Keep your contact and address details current so your patient profile stays up to date.</p></div></section>
+    <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Signed in securely</footer>
+  </main>
   <script src="config.js"></script><script src="shared.js"></script><script>
-    const token = requireToken(), notice = document.querySelector("#notice"), addressForm = document.querySelector("#address-form"), addressNotice = document.querySelector("#address-notice"), saveAddressButton = document.querySelector("#save-address");
-    const loginSucceeded = sessionStorage.getItem("nhrx_login_succeeded") === "1";
-    document.querySelector("#signout").addEventListener("click", () => { localStorage.removeItem("nhrx_access_token"); window.location.replace("login.html"); });
-    const authHeaders = { Authorization: `Bearer ${token}` };
-    if (token) apiRequest("/patients/me", { headers: authHeaders }).then((patient) => {
-      const firstName = patient.firstName || "Patient", fullName = [patient.firstName, patient.lastName].filter(Boolean).join(" ") || firstName;
+    const token = requireToken();
+    setActiveNavigation();
+    document.querySelector("#signout").addEventListener("click", signOut);
+    if (token) apiRequest("/patients/me", { headers: { Authorization: `Bearer ${token}` } }).then((patient) => {
+      const firstName = patient.firstName || "Patient";
+      const fullName = [patient.firstName, patient.lastName].filter(Boolean).join(" ") || firstName;
       document.querySelector("#patient-first-name").textContent = firstName;
       document.querySelector("#patient-full-name").textContent = fullName;
       document.querySelector("#header-name").textContent = fullName;
       document.querySelector("#avatar").textContent = firstName.charAt(0).toUpperCase();
       document.querySelector("#patient-id").textContent = `#${patient.patientID}`;
-      if (loginSucceeded) {
-        showMessage(notice, `You signed in successfully. Welcome, ${firstName}!`, "success");
-        sessionStorage.removeItem("nhrx_login_succeeded");
-      }
-    }).catch((error) => {
+    }).catch(async (error) => {
       localStorage.removeItem("nhrx_access_token");
-      showMessage(notice, `${error.message} Please sign in again.`);
-      setTimeout(() => window.location.replace("login.html"), 1800);
-    });
-    if (token) apiRequest("/patients/me/address", { headers: authHeaders }).then((address) => {
-      const keys = { Area: "area", HouseNumber: "houseNo", Province: "province", City: "city", Street: "street", Block: "block" };
-      for (const [field, key] of Object.entries(keys)) addressForm.elements[field].value = address[key] || "";
-    }).catch((error) => { if (!error.message.includes("Patient address not found")) showMessage(addressNotice, error.message); });
-    addressForm.addEventListener("submit", async (event) => {
-      event.preventDefault(); addressNotice.hidden = true; setBusy(saveAddressButton, true, "Save address");
-      const address = Object.fromEntries(new FormData(addressForm));
-      for (const field of Object.keys(address)) address[field] = address[field].trim() || null;
-      try {
-        await apiRequest("/patients/me/updateAdress", { method: "PATCH", headers: authHeaders, body: JSON.stringify(address) });
-        showMessage(addressNotice, "Your address was saved successfully.", "success");
-      } catch (error) { showMessage(addressNotice, error.message); }
-      finally { setBusy(saveAddressButton, false, "Save address"); }
+      await showFeedback(`${error.message} Please sign in again.`, "error", 1700);
+      window.location.replace("login.html");
     });
   </script>
 </body>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8f6"><title>Home address | NHRX</title><link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-page">
+  <header class="topbar dashboard-topbar">
+    <a class="brand" href="home.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a>
+    <nav class="main-nav" aria-label="Patient account"><a data-page="home.html" href="home.html">Overview</a><a data-page="appointments.html" href="appointments.html">Appointments</a><a data-page="contact.html" href="contact.html">Contact</a><a data-page="address.html" href="address.html">Address</a></nav>
+    <div class="user-menu"><div class="avatar">P</div><span>My account</span><button class="signout" type="button" onclick="signOut()">Sign out</button></div>
+  </header>
+  <main class="settings-main">
+    <a class="back-link" href="home.html">← <span>Back to overview</span></a>
+    <section class="settings-heading"><div class="eyebrow">ACCOUNT DETAILS</div><h1>Home address</h1><p>Review the address saved to your patient profile or update it below.</p></section>
+    <section class="settings-card"><div class="settings-card-heading"><div class="settings-icon gold-icon" aria-hidden="true">⌂</div><div><h2>Address information</h2><p>Fill in the details you want to save. You can update individual fields.</p></div></div>
+      <form id="address-form" novalidate><div class="field-grid">
+        <div class="field"><label for="Area">Area</label><input id="Area" name="Area" maxlength="200" autocomplete="address-level3" placeholder="Area or neighborhood"></div>
+        <div class="field"><label for="HouseNumber">House / unit number</label><input id="HouseNumber" name="HouseNumber" maxlength="100" autocomplete="address-line2" placeholder="House or apartment"></div>
+        <div class="field"><label for="Province">Province</label><input id="Province" name="Province" maxlength="100" autocomplete="address-level1" placeholder="Province"></div>
+        <div class="field"><label for="City">City</label><input id="City" name="City" maxlength="100" autocomplete="address-level2" placeholder="City"></div>
+        <div class="field"><label for="Street">Street</label><input id="Street" name="Street" maxlength="200" autocomplete="address-line1" placeholder="Street"></div>
+        <div class="field"><label for="Block">Block</label><input id="Block" name="Block" maxlength="100" placeholder="Block"></div>
+      </div><div class="form-actions"><button class="button primary" id="save-address" type="submit">Save address <span aria-hidden="true">→</span></button><a class="button secondary" href="home.html">Cancel</a></div></form>
+    </section>
+    <p class="settings-footnote">Your address is stored with your patient account.</p>
+  </main>
+  <script src="config.js"></script><script src="shared.js"></script><script>
+    const token = requireToken();
+    setActiveNavigation();
+    const form = document.querySelector("#address-form");
+    const button = document.querySelector("#save-address");
+    const authHeaders = { Authorization: `Bearer ${token}` };
+    if (token) apiRequest("/patients/me/address", { headers: authHeaders }).then((response) => {
+      const keys = { Area: "area", HouseNumber: "houseNo", Province: "province", City: "city", Street: "street", Block: "block" };
+      for (const [field, key] of Object.entries(keys)) form.elements[field].value = response[key] || "";
+    }).catch((error) => {
+      if (!error.message.toLowerCase().includes("address not found")) showFeedback(error.message, "error");
+    });
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const address = Object.fromEntries(new FormData(form));
+      for (const field of Object.keys(address)) address[field] = address[field].trim();
+      if (!Object.values(address).some(Boolean)) {
+        form.elements.Area.setCustomValidity("Enter at least one address field to save.");
+        form.elements.Area.reportValidity();
+        form.elements.Area.addEventListener("input", () => form.elements.Area.setCustomValidity(""), { once: true });
+        return;
+      }
+      if (!validateForm(form)) return;
+      for (const [field, value] of Object.entries(address)) if (!value) delete address[field];
+      setBusy(button, true, "Saving address…");
+      try {
+        const result = await apiRequest("/patients/me/address", { method: "PATCH", headers: authHeaders, body: JSON.stringify(address) });
+        const saved = result.data || result;
+        const values = { Area: saved.area, HouseNumber: saved.houseNo, Province: saved.province, City: saved.city, Street: saved.street, Block: saved.block };
+        for (const [field, value] of Object.entries(values)) form.elements[field].value = value || "";
+        await showFeedback("Your home address has been updated.", "success");
+      } catch (error) { await showFeedback(error.message, "error"); }
+      finally { setBusy(button, false, "Save address →"); }
+    });
+  </script>
+</body>
+</html>

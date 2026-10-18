@@ -1,4 +1,6 @@
 from sqlalchemy import Integer, Column, Text, TIMESTAMP
+
+from sqlalchemy.orm import relationship
 from database.database import Base
 
 
@@ -15,6 +17,15 @@ class Patient(Base):
     phone = Column(Text)
     email = Column(Text)
     createdAt = Column(TIMESTAMP)
+    medical_records = relationship(
+        "MedicalRecords",
+        back_populates="patient",
+    )
+    addresses = relationship(
+        "PatientAddress",
+        back_populates="patient"
+       
+    )
 
 
 

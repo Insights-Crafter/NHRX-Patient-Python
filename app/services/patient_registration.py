@@ -2,61 +2,69 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from repositories.patient_repository import (
-    create_patient_address,
-    create_patient_with_credentials,
-    get_patient_by_national_id,
-)
+from repositories.patient_repository import PatientRepository
 from schemas.PatientModel import PatientRegistrationRequest
-from utilityfunctions.encryption import encrypt
+from utilityfunctions.encryption import EncryptionService
 from utilityfunctions.passwords import hash_password
 
 
-def register_patient(
-    db: Session, registration: PatientRegistrationRequest
-) -> int:
-    """Validate uniqueness, protect patient data, and create the account."""
-    
-    encrypted_national_id = encrypt(registration.nationalID.strip(), "nationalID")
+class PatientRegistrationService:
+  
+    def __init__(self, db: Session):
+        self.db = db
+        self.patients = PatientRepository(db)
+        self.encryption = EncryptionService()
 
-    if get_patient_by_national_id(db, encrypted_national_id):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A patient with this national ID is already registered",
+    def register(self, registration: PatientRegistrationRequest) -> int:
+        encrypted_national_id = self.encryption.encrypt(
+            registration.nationalID.strip(), "nationalID"
         )
 
-    patient_fields = {
-        "firstName": encrypt(registration.firstName.strip(), "firstName"),
-        "lastName": encrypt(registration.lastName.strip(), "lastName"),
-        "date_of_birth": encrypt(
-            registration.date_of_birth.isoformat() if registration.date_of_birth else None,
-            "date_of_birth",
-        ),
-        "blood_group": encrypt(registration.blood_group, "blood_group"),
-        "gender": encrypt(registration.gender, "gender"),
-        "phone": encrypt(registration.phone, "phone"),
-        "email": encrypt(registration.email, "email"),
-    }
+        if self.patients.get_by_national_id(encrypted_national_id):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A patient with this national ID is already registered",
+            )
 
-    try:
-        patient = create_patient_with_credentials(
-            db,
-            patient_fields=patient_fields,
-            encrypted_national_id=encrypted_national_id,
-            password_hash=hash_password(registration.password),
-        )
-        if registration.address is not None:
-            address_fields = {
-                field: encrypt(value.strip(), field)
-                for field, value in registration.address.model_dump().items()
-            }
-            create_patient_address(db, patient.patientID, address_fields)
-        db.commit()
-        db.refresh(patient)
-    except IntegrityError as exc:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="A patient with this national ID is already registered",
-        ) from exc
-    return patient.patientID
+        patient_fields = {
+            "firstName": self.encryption.encrypt(
+                registration.firstName.strip(), "firstName"
+            ),
+            "lastName": self.encryption.encrypt(
+                registration.lastName.strip(), "lastName"
+            ),
+            "date_of_birth": self.encryption.encrypt(
+                registration.date_of_birth.isoformat()
+                if registration.date_of_birth
+                else None,
+                "date_of_birth",
+            ),
+            "blood_group": self.encryption.encrypt(
+                registration.blood_group, "blood_group"
+            ),
+            "gender": self.encryption.encrypt(registration.gender, "gender"),
+            "phone": self.encryption.encrypt(registration.phone, "phone"),
+            "email": self.encryption.encrypt(registration.email, "email"),
+        }
+
+        try:
+            patient = self.patients.create_with_credentials(
+                patient_fields=patient_fields,
+                encrypted_national_id=encrypted_national_id,
+                password_hash=hash_password(registration.password),
+            )
+            if registration.address is not None:
+                address_fields = {
+                    field: self.encryption.encrypt(value.strip(), field)
+                    for field, value in registration.address.model_dump().items()
+                }
+                self.patients.create_address(patient.patientID, address_fields)
+            self.db.commit()
+            self.db.refresh(patient)
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A patient with this national ID is already registered",
+            ) from exc
+        return patient.patientID

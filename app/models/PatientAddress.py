@@ -1,6 +1,7 @@
 from sqlalchemy import Integer, Column, ForeignKey, Text
 from database.database import Base
 
+from sqlalchemy.orm import relationship
 class PatientAddress(Base):
     __tablename__ = "PatientAddress"
     AddressID = Column(Integer, primary_key=True)
@@ -13,3 +14,4 @@ class PatientAddress(Base):
     City = Column(Text)
     Street = Column(Text)
     Block = Column(Text)
+    patient = relationship("Patient", back_populates="addresses")

@@ -13,6 +13,13 @@ from .recordSymptomsModel import RecordSymptom
 from .RecordTests import MedicalRecordTest
 from .symptoms import Symptom
 
+from .DoctorDummyModel import DoctorDummy
+from .HospitalModel import Hospital
+from .DoctorSpecialities import Specialities
+from .DoctorAvailbilityModel import DoctorAvailability
+from .AppointmentModel import Appointments
+
+
 __all__ = [
     "AuthCredentials",
     "ClinicalNotes",
@@ -26,4 +33,9 @@ __all__ = [
     "RecordSymptom",
     "MedicalRecordTest",
     "Symptom",
+    "DoctorDummy",
+    "Hospital",
+    "Specialities",
+    "DoctorAvailability",
+    "Appointments"
 ]

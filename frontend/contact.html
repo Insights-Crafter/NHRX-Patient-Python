@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8f6"><title>Contact details | NHRX</title><link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-page">
+  <header class="topbar dashboard-topbar">
+    <a class="brand" href="home.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a>
+    <nav class="main-nav" aria-label="Patient account"><a data-page="home.html" href="home.html">Overview</a><a data-page="appointments.html" href="appointments.html">Appointments</a><a data-page="contact.html" href="contact.html">Contact</a><a data-page="address.html" href="address.html">Address</a></nav>
+    <div class="user-menu"><div class="avatar">P</div><span>My account</span><button class="signout" type="button" onclick="signOut()">Sign out</button></div>
+  </header>
+  <main class="settings-main">
+    <a class="back-link" href="home.html">← <span>Back to overview</span></a>
+    <section class="settings-heading"><div class="eyebrow">ACCOUNT DETAILS</div><h1>Contact details</h1><p>Keep your phone and email current so your patient profile has the right information.</p></section>
+    <section class="settings-card"><div class="settings-card-heading"><div class="settings-icon teal-icon" aria-hidden="true">@</div><div><h2>Ways to reach you</h2><p>Your saved contact details are shown below.</p></div></div>
+      <form id="contact-form" novalidate><div class="field-grid">
+        <div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" minlength="11" maxlength="32" placeholder="e.g. 03001234567"><span class="field-hint">Enter at least 11 characters.</span></div>
+        <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com"></div>
+      </div><div class="form-actions"><button class="button primary" id="save-contact" type="submit">Save contact details <span aria-hidden="true">→</span></button><a class="button secondary" href="home.html">Cancel</a></div></form>
+    </section>
+    <p class="settings-footnote">At least one contact field must be provided when saving.</p>
+  </main>
+  <script src="config.js"></script><script src="shared.js"></script><script>
+    const token = requireToken();
+    setActiveNavigation();
+    const form = document.querySelector("#contact-form");
+    const button = document.querySelector("#save-contact");
+    const authHeaders = { Authorization: `Bearer ${token}` };
+    if (token) apiRequest("/patients/me/contact", { headers: authHeaders }).then((contact) => {
+      form.elements.phone.value = contact.phone || "";
+      form.elements.email.value = contact.email || "";
+    }).catch((error) => showFeedback(error.message, "error"));
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!validateForm(form)) return;
+      const contact = Object.fromEntries(new FormData(form));
+      for (const field of Object.keys(contact)) contact[field] = contact[field].trim();
+      if (!Object.values(contact).some(Boolean)) {
+        form.elements.phone.setCustomValidity("Enter a phone number or email address to save.");
+        form.elements.phone.reportValidity();
+        form.elements.phone.addEventListener("input", () => form.elements.phone.setCustomValidity(""), { once: true });
+        form.elements.email.addEventListener("input", () => form.elements.phone.setCustomValidity(""), { once: true });
+        return;
+      }
+      for (const [field, value] of Object.entries(contact)) if (!value) delete contact[field];
+      setBusy(button, true, "Saving contact details…");
+      try {
+        const result = await apiRequest("/patients/me/contact", { method: "PATCH", headers: authHeaders, body: JSON.stringify(contact) });
+        const saved = result.data || result;
+        form.elements.phone.value = saved.phone || "";
+        form.elements.email.value = saved.email || "";
+        await showFeedback("Your contact details have been updated.", "success");
+      } catch (error) { await showFeedback(error.message, "error"); }
+      finally { setBusy(button, false, "Save contact details →"); }
+    });
+  </script>
+</body>
+</html>

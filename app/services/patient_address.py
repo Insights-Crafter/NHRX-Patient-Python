@@ -1,73 +1,65 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from repositories.patient_repository import (
-    create_patient_address,
-    get_patient_address as load_patient_address,
-    update_address,
-)
+from models.PatientAddress import PatientAddress
+from repositories.patient_repository import PatientRepository
 from schemas.AddressUpdate import AddressUpdateRequest, AddressUpdateResponse
-from utilityfunctions.encryption import decrypt, encrypt
+from utilityfunctions.encryption import EncryptionService
 
 
-def update_patient_address(
-    db: Session,
-    patient_id: int,
-    request: AddressUpdateRequest,
-) -> AddressUpdateResponse:
+class PatientAddressService:
+    """Read and update patient addresses through the repository."""
 
-    supplied_fields = request.model_dump(exclude_unset=True)
+    def __init__(self, db: Session):
+        self.db = db
+        self.patients = PatientRepository(db)
+        self.encryption = EncryptionService()
 
-    if not supplied_fields:
-        raise HTTPException(
-            status_code=422,
-            detail="Provide at least one address field to update",
+    def update(
+        self, patient_id: int, request: AddressUpdateRequest
+    ) -> AddressUpdateResponse:
+        supplied_fields = request.model_dump(exclude_unset=True)
+        if not supplied_fields:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Provide at least one address field to update",
+            )
+
+        encrypted_fields = {
+            field: self.encryption.encrypt(value, field)
+            for field, value in supplied_fields.items()
+        }
+        address = self.patients.get_address(patient_id)
+        if address is None:
+            address = self.patients.create_address(patient_id, encrypted_fields)
+            self.db.commit()
+            self.db.refresh(address)
+        else:
+            address = self.patients.update_address(patient_id, encrypted_fields)
+
+        if address is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Patient address not found",
+            )
+        return self._to_response(address)
+
+    def get(self, patient_id: int) -> AddressUpdateResponse:
+        address = self.patients.get_address(patient_id)
+        if address is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Patient address not found",
+            )
+        return self._to_response(address)
+
+    def _to_response(self, address: PatientAddress) -> AddressUpdateResponse:
+        """Decrypt an ORM address into the API response schema."""
+        return AddressUpdateResponse(
+            area=self.encryption.decrypt(address.Area, "Area"),
+            houseNo=self.encryption.decrypt(address.HouseNumber, "HouseNumber"),
+            province=self.encryption.decrypt(address.Province, "Province"),
+            city=self.encryption.decrypt(address.City, "City"),
+            street=self.encryption.decrypt(address.Street, "Street"),
+            block=self.encryption.decrypt(address.Block, "Block"),
         )
-
-    encrypted_fields = {}
-
-    for field, value in supplied_fields.items():
-        encrypted_fields[field] = encrypt(value, field)
-
-    existing_address = load_patient_address(db, patient_id)
-    if existing_address is None:
-        address = create_patient_address(db, patient_id, encrypted_fields)
-        db.commit()
-        db.refresh(address)
-    else:
-        address = update_address(db, patient_id, encrypted_fields)
-
-    if address is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Patient address not found",
-        )
-
-    return AddressUpdateResponse(
-        area=decrypt(address.Area, "Area"),
-        houseNo=decrypt(address.HouseNumber, "HouseNumber"),
-        province=decrypt(address.Province, "Province"),
-        city=decrypt(address.City, "City"),
-        street=decrypt(address.Street, "Street"),
-        block=decrypt(address.Block, "Block"),
-    )
-
-
-def get_patientt_address(db: Session, patient_id: int) -> AddressUpdateResponse:
-    """Load and decrypt the patient's address for an API response."""
-    address = load_patient_address(db, patient_id)
-
-    if address is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient address not found",
-        )
-
-    return AddressUpdateResponse(
-        area=decrypt(address.Area, "Area"),
-        houseNo=decrypt(address.HouseNumber, "HouseNumber"),
-        province=decrypt(address.Province, "Province"),
-        city=decrypt(address.City, "City"),
-        street=decrypt(address.Street, "Street"),
-        block=decrypt(address.Block, "Block"),
-    )

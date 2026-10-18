@@ -1,2 +1,2 @@
-// Nginx forwards this same-origin path to FastAPI in Docker.
-window.NHRX_API_BASE = "/api";
+// Direct local FastAPI connection. Start the backend on localhost:8000.
+window.NHRX_API_BASE = "http://localhost:8000";

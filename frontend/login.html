@@ -2,31 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f6f8fc"><title>Sign in · NHRX</title><link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#f5f8f6"><title>Sign in | NHRX Patient Portal</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body class="auth-page">
-  <header class="topbar"><a class="brand" href="login.html"><span class="brand-mark">☾</span>NHRX <span>Patient Portal</span></a><a class="quiet-link" href="register.html">Create account</a></header>
+  <header class="topbar"><a class="brand" href="login.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a><a class="quiet-link" href="register.html">Create account</a></header>
   <main class="auth-layout">
-    <section class="welcome-panel"><div class="eyebrow">YOUR HEALTH, IN ONE PLACE</div><h1>Care that keeps you connected.</h1><p>Sign in to reach your personal patient dashboard and stay close to the information that matters.</p><div class="welcome-art" aria-hidden="true"><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-crescent">☾</div><span class="art-dot dot-one"></span><span class="art-dot dot-two"></span><span class="art-dot dot-three"></span></div><div class="privacy-note"><span>✓</span> Your account is protected with secure sign-in</div></section>
-    <section class="form-panel"><div class="form-wrap"><div class="mobile-mark">☾</div><div class="eyebrow">WELCOME BACK</div><h2>Sign in to your account</h2><p class="form-intro">Enter the national ID and password linked to your account.</p><div id="notice" class="notice" role="alert" hidden></div>
-      <div id="success-notice" class="notice success" role="status" hidden></div><form id="login-form"><label for="nationalID">National ID</label><input id="nationalID" name="nationalID" autocomplete="username" placeholder="Enter your national ID" required maxlength="64"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="8" maxlength="128"><button class="button primary full" type="submit">Sign in</button></form>
-      <p class="form-switch">New to NHRX? <a href="register.html">Create a patient account</a></p><p class="fine-print">By signing in, you agree to keep your account credentials private.</p></div></section>
+    <section class="welcome-panel">
+      <div class="eyebrow">CARE, CONNECTED</div><h1>Your health information, in one place.</h1>
+      <p>A calm, secure space to manage your patient profile and keep your details up to date.</p>
+      <div class="welcome-art" aria-hidden="true"><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><img src="nhrx-mark.svg" alt=""></div>
+      <div class="privacy-note"><span>✓</span> Secure access to your patient account</div>
+    </section>
+    <section class="form-panel"><div class="form-wrap">
+      <img class="mobile-mark" src="nhrx-mark.svg" alt="NHRX">
+      <div class="eyebrow">WELCOME BACK</div><h2>Sign in</h2><p class="form-intro">Use the national ID and password linked to your account.</p>
+      <form id="login-form" novalidate>
+        <div class="field"><label for="nationalID">National ID</label><input id="nationalID" name="nationalID" autocomplete="username" inputmode="numeric" placeholder="13 digit national ID" required minlength="13" maxlength="13" pattern="[0-9]{13}" title="Enter your 13 digit national ID."></div>
+        <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" required minlength="8" maxlength="128"></div>
+        <button class="button primary full" type="submit">Sign in <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="form-switch">New to NHRX? <a href="register.html">Create a patient account</a></p>
+      <p class="fine-print">Keep your account credentials private to protect your health information.</p>
+    </div></section>
   </main>
   <script src="config.js"></script><script src="shared.js"></script><script>
-    const form = document.querySelector("#login-form"), notice = document.querySelector("#notice"), button = form.querySelector("button");
-    document.querySelector("#nationalID").value = sessionStorage.getItem("nhrx_last_national_id") || "";
-    if (new URLSearchParams(window.location.search).has("registered")) showMessage(document.querySelector("#success-notice"), "Your account was created successfully. Sign in to continue.", "success");
+    const form = document.querySelector("#login-form");
+    const button = form.querySelector("button");
+    form.nationalID.value = sessionStorage.getItem("nhrx_last_national_id") || "";
     form.addEventListener("submit", async (event) => {
-      event.preventDefault(); notice.hidden = true; setBusy(button, true, "Sign in");
+      event.preventDefault();
+      if (!validateForm(form)) return;
+      setBusy(button, true, "Signing in…");
       try {
-        const nationalID = form.nationalID.value.trim();
+        const nationalID = form.nationalID.value;
         const result = await apiRequest("/auth/login", { method: "POST", body: JSON.stringify({ nationalID, password: form.password.value }) });
         localStorage.setItem("nhrx_access_token", result.access_token);
         sessionStorage.setItem("nhrx_last_national_id", nationalID);
-        sessionStorage.setItem("nhrx_login_succeeded", "1");
+        await showFeedback("You’re signed in. Opening your patient dashboard…", "success", 1700);
         window.location.assign("home.html");
-      } catch (error) { showMessage(notice, error.message); }
-      finally { setBusy(button, false, "Sign in"); }
+      } catch (error) {
+        await showFeedback(error.message, "error");
+      } finally { setBusy(button, false, "Sign in"); }
     });
   </script>
 </body>

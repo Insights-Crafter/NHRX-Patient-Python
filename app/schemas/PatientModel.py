@@ -21,13 +21,13 @@ class PatientAddressRegistration(BaseModel):
 
 
 class PatientCreate(BaseModel):
-    nationalID: str | None = None
+    nationalID: str  = Field(min_length=11, max_length=11)
     firstName: str | None = None
     lastName: str | None = None
     date_of_birth: str | None = None
     blood_group: str | None = None
     gender: str | None = None
-    phone: str | None = None
+    phone: str  = Field(min_length=11, max_length=11)
     email: str | None = None
     createdAt: date | None = None
 
@@ -39,7 +39,7 @@ class PatientRead(PatientCreate):
 
 
 class PatientRegistrationRequest(BaseModel):
-    nationalID: str = Field(min_length=1, max_length=64)
+    nationalID: str = Field(min_length=13, max_length=13)
     firstName: str = Field(min_length=1, max_length=100)
     lastName: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=8, max_length=128)
