@@ -4,7 +4,7 @@ from database.database import Base
 
 
 class DoctorAvailability(Base):
-    __tablename__ = "DoctorTimings"
+    __tablename__ = "DoctorTimings_Dummy"
     availability_id = Column(Integer,primary_key=True)
     doctorID = Column(Integer,ForeignKey("Doctor_Dummy.doctorID"))
     day = Column(String)

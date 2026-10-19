@@ -1,7 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict,  field_validator
-from datetime import date, time, datetime
+from datetime import date, datetime, time
 
-import datetime
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 
 class AppointmentCreate(BaseModel):
     DoctorID: int = Field(gt=0)
@@ -11,12 +11,17 @@ class AppointmentCreate(BaseModel):
 
     @field_validator("Complaint")
     @classmethod
-    def validate_complaint(cls, value:str):
+    def validate_complaint(cls, value: str) -> str:
         value = value.strip()
         if not value:
             raise ValueError("Complaint cannot be empty")
-
         return value
+
+
+class AppointmentReschedule(BaseModel):
+    AppointmentDate: date
+    AppointmentTime: time
+
 
 class AppointmentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -27,7 +32,14 @@ class AppointmentResponse(BaseModel):
     AppointmentDate: date
     AppointmentTime: time
     Complaint: str
-    Booked_at: datetime
+    Booked_at: datetime | None
+
+
+class AppointmentDetail(AppointmentResponse):
+    doctorName: str | None = None
+    specialityName: str | None = None
+    hospitalName: str | None = None
+    City: str | None = None
 
 
 class AppointmentUpdate(BaseModel):
@@ -35,8 +47,10 @@ class AppointmentUpdate(BaseModel):
 
     AppointmentDate: date | None = None
     AppointmentTime: time | None = None
-    Complaint: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=1000,
-    )
+    Complaint: str | None = Field(default=None, min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def require_update(self):
+        if self.AppointmentDate is None and self.AppointmentTime is None and self.Complaint is None:
+            raise ValueError("Provide at least one appointment field to update")
+        return self

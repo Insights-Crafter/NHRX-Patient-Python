@@ -9,9 +9,10 @@ The frontend is a responsive patient portal with registration, sign-in, a patien
 - The overview loads the authenticated profile from `GET /patients/me` and links to the account update pages.
 - The address page loads and saves with `GET` and `PATCH /patients/me/address`.
 - The contact page loads and saves with `GET` and `PATCH /patients/me/contact`.
-- The appointments page loads doctors from `GET /doctors`, loads speciality and city options from `GET /doctors/filters`, and supports name, speciality, and city filtering. Search filters, pagination, and the selected doctor are represented in the URL query string.
+- The appointments page loads and filters doctors, shows 30-minute availability from `GET /doctors/{doctor_id}/availability`, and books through authenticated `POST /appointments`.
+- Patients can view their bookings with `GET /appointments`, reschedule with `PATCH /appointments/{appointment_id}`, and cancel with `DELETE /appointments/{appointment_id}`. The API scopes appointment changes to the signed-in patient.
 
-Doctor discovery is connected to the backend. Availability lookup and appointment creation are not implemented in the backend yet, so selecting a doctor does not create or confirm an appointment.
+Availability is generated from the doctor's recurring weekday schedule in `DoctorTimings_Dummy`; each appointment occupies a 30-minute slot. Booking checks availability again before saving, so a slot selected earlier can still be rejected if another patient booked it.
 
 Successful registration and sign-in show a timed confirmation widget before navigating to the next page. Account update pages show timed success or error feedback without moving the user away from the form.
 
@@ -19,4 +20,4 @@ The UI uses native browser constraints plus shared JavaScript validation before 
 
 ## Local API connection
 
-`config.js` points directly to `http://localhost:8000`. Start FastAPI on that address and open the frontend from a localhost web server so the browser can make API requests. FastAPI allows localhost origins on any port for local development. If your backend uses another port, update `window.NHRX_API_BASE` in `config.js`.
+During local frontend development, `config.js` points to FastAPI at `http://localhost:8000`. When served by the Nginx container, it uses the same-origin `/api` proxy configured in `nginx.conf`, which forwards requests to the backend container. For a different local backend port, update `window.NHRX_API_BASE` in `config.js`.

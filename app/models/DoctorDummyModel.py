@@ -10,7 +10,7 @@ class DoctorDummy(Base):
     Name = Column(String)
     YearsofExperience = Column(Integer)
     DailyPatientLimit = Column(Integer)
-    specialityID = Column(Integer, ForeignKey("Specialities.specialityID"))
+    specialityID = Column(Integer, ForeignKey("Specialities_Dummy.specialityID"))
     hospitalID = Column(Integer,ForeignKey("Hospitals.hospitalID"))
 
 

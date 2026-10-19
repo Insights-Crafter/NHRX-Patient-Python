@@ -20,6 +20,7 @@ from routes.PatientProfileRoutes import router as patient_profile_router
 from routes.PatientUpdateRoutes import router as patient_update_router
 from routes.Authentication import authRouter
 from routes.DoctorRoutes import router as doctor_router
+from routes.AppointmentRoutes import router as appointment_router
 
 
 @asynccontextmanager
@@ -50,6 +51,7 @@ app.include_router(patient_profile_router)
 app.include_router(patient_update_router)
 app.include_router(authRouter)
 app.include_router(doctor_router)
+app.include_router(appointment_router)
 
 
 @app.get("/", tags=["health"])
