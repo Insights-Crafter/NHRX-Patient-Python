@@ -21,6 +21,15 @@
       </div>
     </section>
 
+    <section class="directory-panel appointments-panel" aria-labelledby="my-appointments-title">
+      <div class="directory-panel-heading">
+        <div><div class="eyebrow">YOUR CARE</div><h2 id="my-appointments-title">My appointments</h2></div>
+        <button id="refresh-appointments" class="button secondary" type="button">Refresh</button>
+      </div>
+      <p id="appointments-status" aria-live="polite">Loading appointments…</p>
+      <div id="appointments-list" class="appointments-list"></div>
+    </section>
+
     <section class="directory-panel" aria-labelledby="doctor-search-title">
       <div class="directory-panel-heading"><div><div class="eyebrow">DOCTOR DIRECTORY</div><h2 id="doctor-search-title">Explore our doctors</h2></div><span class="directory-secure"><span aria-hidden="true">●</span> Patient portal</span></div>
       <form id="doctor-filter-form" class="doctor-filters">
@@ -49,14 +58,21 @@
         <button class="button secondary" id="empty-clear" type="button">Clear all filters</button>
       </section>
       <section id="error-state" class="directory-error" hidden>
-        <div class="error-emblem" aria-hidden="true">!</div><div><h2>We couldn’t load the doctor list</h2><p id="error-copy">Check that the patient API is running at localhost, then try again.</p></div><button class="button secondary" id="retry-doctors" type="button">Try again</button>
+        <div class="error-emblem" aria-hidden="true">!</div><div><h2>We couldn’t load the doctor list</h2><p id="error-copy">Check that the patient API is running, then try again.</p></div><button class="button secondary" id="retry-doctors" type="button">Try again</button>
       </section>
       <nav class="directory-pagination" aria-label="Doctor results pages"><button id="previous-page" class="button secondary" type="button">← Previous</button><span id="pagination-label">Page 1</span><button id="next-page" class="button secondary" type="button">Next →</button></nav>
     </section>
 
     <section id="selected-doctor" class="selected-doctor" hidden aria-live="polite">
       <div class="selected-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 17c0-6 4-10 10-10s10 4 10 10-4 10-10 10"/><path d="m21 8 5-1-1 5"/></svg></div>
-      <div class="selected-copy"><div class="eyebrow">DOCTOR SELECTED</div><h2 id="selected-name"></h2><p>Doctor search is connected. Appointment availability and confirmation APIs are not yet available, so no booking has been made.</p></div>
+      <div class="selected-copy"><div class="eyebrow">BOOK AN APPOINTMENT</div><h2 id="selected-name"></h2><p>Choose a date and available time, then tell the doctor what you need help with.</p>
+        <form id="booking-form" class="booking-form">
+          <label>Date<input id="booking-date" name="date" type="date" required></label>
+          <label>Available time<select id="booking-time" name="time" required disabled><option value="">Choose a date first</option></select></label>
+          <label class="booking-complaint">Reason for visit<textarea id="booking-complaint" name="complaint" maxlength="1000" required placeholder="Briefly describe your concern"></textarea></label>
+          <button id="book-appointment" class="button primary" type="submit">Confirm appointment</button>
+        </form>
+      </div>
       <button id="remove-selection" class="clear-filters" type="button">Remove selection</button>
     </section>
     <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Find care near you</footer>
@@ -70,7 +86,136 @@
     const emptyState = document.querySelector("#empty-state");
     const errorState = document.querySelector("#error-state");
     const selectedPanel = document.querySelector("#selected-doctor");
+    const bookingForm = document.querySelector("#booking-form");
+    const dateInput = document.querySelector("#booking-date");
+    const timeSelect = document.querySelector("#booking-time");
     const pageSize = 12;
+
+    function appointmentRequest(path, options = {}) {
+      return apiRequest(path, {
+        ...options,
+        headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
+      });
+    }
+
+    function localDateString(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    async function loadAvailableTimes() {
+      timeSelect.replaceChildren(new Option("Loading times…", ""));
+      timeSelect.disabled = true;
+      if (!state.doctor_id || !dateInput.value) return;
+      try {
+        const times = await apiRequest(`/doctors/${state.doctor_id}/availability?date=${encodeURIComponent(dateInput.value)}`);
+        timeSelect.replaceChildren(new Option(times.length ? "Choose a time" : "No times available", ""));
+        for (const value of times) timeSelect.add(new Option(value.slice(0, 5), value));
+        timeSelect.disabled = times.length === 0;
+      } catch (error) {
+        timeSelect.replaceChildren(new Option("Could not load times", ""));
+        await showFeedback(error.message, "error");
+      }
+    }
+
+    async function loadAppointments() {
+      const status = document.querySelector("#appointments-status");
+      const list = document.querySelector("#appointments-list");
+      const refreshButton = document.querySelector("#refresh-appointments");
+      refreshButton.disabled = true;
+      status.textContent = "Loading appointments…";
+      try {
+        const appointments = await appointmentRequest("/appointments");
+        list.replaceChildren();
+        status.textContent = appointments.length ? `${appointments.length} appointment${appointments.length === 1 ? "" : "s"}` : "You don’t have any appointments yet.";
+        for (const item of appointments) {
+          const card = document.createElement("article");
+          card.className = "appointment-card";
+          const details = document.createElement("div");
+          const title = document.createElement("h3");
+          title.textContent = item.doctorName || "Doctor";
+          const meta = document.createElement("p");
+          const apptDate = new Date(`${item.AppointmentDate}T00:00:00`);
+          meta.className = "appointment-when";
+          meta.textContent = `${apptDate.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })} at ${item.AppointmentTime.slice(0, 5)}`;
+          const venue = document.createElement("p");
+          venue.className = "appointment-venue";
+          venue.textContent = [item.specialityName, item.hospitalName, item.City].filter(Boolean).join(" · ") || "Appointment details";
+          const complaint = document.createElement("p");
+          complaint.className = "appointment-complaint";
+          complaint.textContent = item.Complaint;
+          details.append(title, meta, venue, complaint);
+          const reschedule = document.createElement("div");
+          reschedule.className = "reschedule-controls";
+          const newDate = document.createElement("input");
+          newDate.type = "date";
+          newDate.min = localDateString();
+          const newTime = document.createElement("select");
+          newTime.disabled = true;
+          newTime.add(new Option("Choose date first", ""));
+          newDate.addEventListener("change", async () => {
+            newTime.replaceChildren(new Option("Loading…", ""));
+            newTime.disabled = true;
+            if (!newDate.value) return;
+            try {
+              const slots = await apiRequest(`/doctors/${item.DoctorID}/availability?date=${encodeURIComponent(newDate.value)}`);
+              newTime.replaceChildren(new Option(slots.length ? "Choose time" : "No times available", ""));
+              for (const slot of slots) newTime.add(new Option(slot.slice(0, 5), slot));
+              newTime.disabled = !slots.length;
+            } catch (error) {
+              newTime.replaceChildren(new Option(error.message, ""));
+            }
+          });
+          const saveNewTime = document.createElement("button");
+          saveNewTime.type = "button";
+          saveNewTime.className = "button secondary";
+          saveNewTime.textContent = "Reschedule";
+          saveNewTime.addEventListener("click", async () => {
+            if (!newDate.value || !newTime.value) {
+              await showFeedback("Choose a new date and time first.", "error");
+              return;
+            }
+            saveNewTime.disabled = true;
+            try {
+              await appointmentRequest(`/appointments/${item.AppointmentID}`, {
+                method: "PATCH",
+                body: JSON.stringify({ AppointmentDate: newDate.value, AppointmentTime: newTime.value }),
+              });
+              await loadAppointments();
+              await showFeedback("Appointment rescheduled.", "success");
+            } catch (error) {
+              saveNewTime.disabled = false;
+              await showFeedback(error.message, "error");
+            }
+          });
+          reschedule.append(newDate, newTime, saveNewTime);
+          details.append(reschedule);
+          const cancel = document.createElement("button");
+          cancel.className = "button secondary";
+          cancel.type = "button";
+          cancel.textContent = "Cancel";
+          cancel.addEventListener("click", async () => {
+            cancel.disabled = true;
+            try {
+              await appointmentRequest(`/appointments/${item.AppointmentID}`, { method: "DELETE" });
+              await loadAppointments();
+              await showFeedback("Appointment cancelled.", "success");
+            } catch (error) {
+              cancel.disabled = false;
+              await showFeedback(error.message, "error");
+            }
+          });
+          card.append(details, cancel);
+          list.append(card);
+        }
+      } catch (error) {
+        status.textContent = `Could not load appointments: ${error.message}`;
+      } finally {
+        refreshButton.disabled = false;
+      }
+    }
 
     function readQuery() {
       const params = new URLSearchParams(window.location.search);
@@ -162,6 +307,9 @@
       state.doctor_id = doctor.doctorID;
       document.querySelector("#selected-name").textContent = doctor.Name || "Selected doctor";
       selectedPanel.hidden = false;
+      dateInput.min = localDateString();
+      if (!dateInput.value || dateInput.value < dateInput.min) dateInput.value = dateInput.min;
+      loadAvailableTimes();
       updateUrl();
       loadDoctors({ updateHistory: false });
       selectedPanel.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -206,6 +354,9 @@
         if (chosen) {
           document.querySelector("#selected-name").textContent = chosen.Name || "Selected doctor";
           selectedPanel.hidden = false;
+          dateInput.min = localDateString();
+          if (!dateInput.value || dateInput.value < dateInput.min) dateInput.value = dateInput.min;
+          await loadAvailableTimes();
         }
       } catch (error) {
         loadingState.hidden = true;
@@ -237,6 +388,36 @@
     document.querySelector("#clear-filters").addEventListener("click", clearFilters);
     document.querySelector("#empty-clear").addEventListener("click", clearFilters);
     document.querySelector("#retry-doctors").addEventListener("click", () => loadDoctors());
+    document.querySelector("#refresh-appointments").addEventListener("click", loadAppointments);
+    dateInput.min = localDateString();
+    dateInput.value = dateInput.min;
+    dateInput.addEventListener("change", loadAvailableTimes);
+    bookingForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!state.doctor_id || !timeSelect.value || !bookingForm.reportValidity()) return;
+      const button = document.querySelector("#book-appointment");
+      button.disabled = true;
+      try {
+        await appointmentRequest("/appointments", {
+          method: "POST",
+          body: JSON.stringify({
+            DoctorID: state.doctor_id,
+            AppointmentDate: dateInput.value,
+            AppointmentTime: timeSelect.value,
+            Complaint: document.querySelector("#booking-complaint").value.trim(),
+          }),
+        });
+        document.querySelector("#booking-complaint").value = "";
+        await loadAvailableTimes();
+        await loadAppointments();
+        await showFeedback("Appointment booked successfully.", "success");
+      } catch (error) {
+        await showFeedback(error.message, "error");
+        await loadAvailableTimes();
+      } finally {
+        button.disabled = false;
+      }
+    });
     document.querySelector("#remove-selection").addEventListener("click", () => {
       state.doctor_id = null;
       selectedPanel.hidden = true;
@@ -262,10 +443,12 @@
 
     (async function initializeDirectory() {
       if (!token) return;
+      const appointmentsLoading = loadAppointments();
       try { await loadFilterOptions(); }
       catch (error) { showFeedback(`Could not load speciality and city filters: ${error.message}`, "error"); }
       applyStateToForm();
       await loadDoctors();
+      await appointmentsLoading;
     })();
   </script>
 </body>

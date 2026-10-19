@@ -234,6 +234,24 @@ a:hover { color: var(--teal-dark); }
 .selected-copy { flex: 1; }
 .selected-copy h2 { margin: 4px 0; color: #2c433b; font: 700 14px Manrope, sans-serif; }
 .selected-copy p { max-width: 650px; margin: 0; color: #71847a; font-size: 10px; line-height: 1.55; }
+.booking-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin-top: 15px; }
+.booking-form label { display: grid; gap: 5px; color: #536b60; font-size: 11px; font-weight: 700; }
+.booking-form input, .booking-form select, .booking-form textarea, .reschedule-controls input, .reschedule-controls select { min-width: 0; min-height: 38px; padding: 8px 10px; border: 1px solid #d8e4dd; border-radius: 7px; background: #fff; color: #344a41; font: inherit; }
+.booking-form .booking-complaint { grid-column: 1 / -1; }
+.booking-form textarea { min-height: 70px; resize: vertical; }
+.booking-form button { justify-self: start; }
+.appointments-panel { margin: 18px 0 20px; }
+.appointments-panel > #appointments-status { margin: 0 0 12px; color: #71847a; font-size: 13px; }
+.appointments-list { display: grid; gap: 10px; }
+.appointment-card { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 17px; border: 1px solid #e1eae5; border-radius: 10px; background: #fbfdfb; }
+.appointment-card h3 { margin: 0 0 7px; color: #2d443c; font: 700 15px Manrope, sans-serif; }
+.appointment-card p { margin: 5px 0; color: #60746a; font-size: 13px; line-height: 1.5; }
+.appointment-card .appointment-when { color: #24685d; font-weight: 700; }
+.appointment-card .appointment-venue { color: #75877e; }
+.appointment-card .appointment-complaint { margin-top: 9px; color: #465b51; }
+.reschedule-controls { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.reschedule-controls input, .reschedule-controls select { min-height: 34px; font-size: 11px; }
+.appointment-card > .button { flex: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .directory-pagination[hidden], .selected-doctor[hidden], .empty-state[hidden], .directory-error[hidden], #loading-state[hidden] { display: none; }
 
@@ -326,6 +344,9 @@ a:hover { color: var(--teal-dark); }
   .directory-error { align-items: flex-start; flex-wrap: wrap; }
   .directory-error .button { width: 100%; margin-left: 46px; }
   .selected-doctor { align-items: flex-start; flex-wrap: wrap; padding: 16px; }
+  .booking-form { grid-template-columns: 1fr; }
+  .booking-form .booking-complaint { grid-column: auto; }
+  .appointment-card { flex-direction: column; }
   .selected-copy { min-width: calc(100% - 60px); }
   .selected-doctor > .clear-filters { margin-left: 52px; }
   .back-link { margin-bottom: 22px; }
