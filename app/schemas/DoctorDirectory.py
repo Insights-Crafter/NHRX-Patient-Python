@@ -1,6 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from schemas.DoctorSpecialities import SpecialityRead
+
+
+class DoctorTimingResponse(BaseModel):
+    day: str
+    startTime: str
+    endTime: str
 
 
 class DoctorCardResponse(BaseModel):
@@ -15,6 +21,7 @@ class DoctorCardResponse(BaseModel):
     hospitalID: int | None
     hospitalName: str | None
     City: str | None
+    timings: list[DoctorTimingResponse] = Field(default_factory=list)
 
 
 class DoctorFilterOptionsResponse(BaseModel):

@@ -34,7 +34,10 @@ class DoctorDirectoryService:
 
     def get_filter_options(self) -> DoctorFilterOptionsResponse:
         specialities = [
-            SpecialityRead.model_validate(item)
+            SpecialityRead(
+                specialityID=item.id,
+                specialityName=item.name,
+            )
             for item in self.doctors.list_specialities()
         ]
         return DoctorFilterOptionsResponse(

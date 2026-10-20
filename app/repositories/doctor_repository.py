@@ -3,7 +3,8 @@ from typing import TypedDict, cast
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from models.DoctorDummyModel import DoctorDummy
+from models.DoctorAvailbilityModel import DoctorAvailability
+from models.DoctorModel import Doctor
 from models.DoctorSpecialities import Specialities
 from models.HospitalModel import Hospital
 
@@ -37,30 +38,32 @@ class DoctorRepository:
         """Return doctor-card fields, applying any provided filters."""
         statement = (
             select(
-                DoctorDummy.doctorID.label("doctorID"),
-                DoctorDummy.Name.label("Name"),
-                DoctorDummy.YearsofExperience.label("YearsofExperience"),
-                DoctorDummy.DailyPatientLimit.label("DailyPatientLimit"),
-                Specialities.specialityID.label("specialityID"),
-                Specialities.specialityName.label("specialityName"),
+                Doctor.id.label("doctorID"),
+                Doctor.name.label("Name"),
+                Doctor.yearsofExperience.label("YearsofExperience"),
+                Doctor.dailyPatientLimit.label("DailyPatientLimit"),
+                Specialities.id.label("specialityID"),
+                Specialities.name.label("specialityName"),
                 Hospital.hospitalID.label("hospitalID"),
                 Hospital.hospitalName.label("hospitalName"),
                 Hospital.City.label("City"),
             )
-            .join(
-                Specialities,
-                DoctorDummy.specialityID == Specialities.specialityID,
-            )
-            .join(Hospital, DoctorDummy.hospitalID == Hospital.hospitalID)
+            .select_from(Doctor)
+            .outerjoin(Specialities, Doctor.specialtyId == Specialities.id)
+            .outerjoin(Hospital, Doctor.hospitalId == Hospital.hospitalID)
         )
 
         if search and search.strip():
+            term = f"%{search.strip()}%"
             statement = statement.where(
-                DoctorDummy.Name.ilike(f"%{search.strip()}%")
+                Doctor.name.ilike(term)
+                | Specialities.name.ilike(term)
+                | Hospital.hospitalName.ilike(term)
+                | Hospital.City.ilike(term)
             )
         if speciality_id is not None:
             statement = statement.where(
-                DoctorDummy.specialityID == speciality_id
+                Doctor.specialtyId == speciality_id
             )
         if city and city.strip():
             statement = statement.where(
@@ -68,18 +71,53 @@ class DoctorRepository:
             )
 
         statement = (
-            statement.order_by(func.lower(DoctorDummy.Name))
+            statement.order_by(func.lower(Doctor.name))
             .limit(limit)
             .offset(offset)
         )
-        rows = self.db.execute(statement).mappings().all()
-        return [cast(DoctorCardRow, dict(row)) for row in rows]
+        rows = [dict(row) for row in self.db.execute(statement).mappings().all()]
+        doctor_ids = [row["doctorID"] for row in rows]
+        if not doctor_ids:
+            return []
+
+        timing_statement = (
+            select(
+                DoctorAvailability.doctorId,
+                DoctorAvailability.day,
+                DoctorAvailability.startTime,
+                DoctorAvailability.endTime,
+            )
+            .where(
+                DoctorAvailability.doctorId.in_(doctor_ids),
+                DoctorAvailability.day.is_not(None),
+                DoctorAvailability.startTime.is_not(None),
+                DoctorAvailability.endTime.is_not(None),
+            )
+            .order_by(
+                DoctorAvailability.doctorId,
+                DoctorAvailability.day,
+                DoctorAvailability.startTime,
+            )
+        )
+        timings_by_doctor: dict[int, list[dict[str, str]]] = {}
+        for timing in self.db.execute(timing_statement).mappings():
+            timings_by_doctor.setdefault(timing["doctorId"], []).append(
+                {
+                    "day": timing["day"],
+                    "startTime": timing["startTime"],
+                    "endTime": timing["endTime"],
+                }
+            )
+
+        for row in rows:
+            row["timings"] = timings_by_doctor.get(row["doctorID"], [])
+        return [cast(DoctorCardRow, row) for row in rows]
 
     def list_specialities(self) -> list[Specialities]:
         """Return all specialities ordered by name for a filter dropdown."""
         statement = select(Specialities).order_by(
-            func.lower(Specialities.specialityName)
-        )
+            func.lower(Specialities.name)
+        ).where(Specialities.name.is_not(None), func.trim(Specialities.name) != "")
         return list(self.db.scalars(statement).all())
 
     def list_cities(self) -> list[str]:

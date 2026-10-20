@@ -30,6 +30,7 @@
       <div id="appointments-list" class="appointments-list"></div>
     </section>
 
+    <div class="directory-layout">
     <section class="directory-panel" aria-labelledby="doctor-search-title">
       <div class="directory-panel-heading"><div><div class="eyebrow">DOCTOR DIRECTORY</div><h2 id="doctor-search-title">Explore our doctors</h2></div><span class="directory-secure"><span aria-hidden="true">●</span> Patient portal</span></div>
       <form id="doctor-filter-form" class="doctor-filters">
@@ -75,6 +76,7 @@
       </div>
       <button id="remove-selection" class="clear-filters" type="button">Remove selection</button>
     </section>
+    </div>
     <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Find care near you</footer>
   </main>
   <script src="config.js"></script><script src="shared.js"></script><script>
@@ -283,6 +285,12 @@
       const speciality = document.createElement("p");
       speciality.className = "doctor-speciality";
       speciality.textContent = doctor.specialityName || "Speciality not listed";
+      const schedule = document.createElement("p");
+      schedule.className = "doctor-timings";
+      const timings = Array.isArray(doctor.timings) ? doctor.timings : [];
+      schedule.textContent = timings.length
+        ? `Weekly hours: ${timings.map((item) => `${item.day} ${String(item.startTime).slice(0, 5)}–${String(item.endTime).slice(0, 5)}`).join(" · ")}`
+        : "Weekly hours not listed";
       const location = document.createElement("p");
       location.className = "doctor-location";
       location.innerHTML = '<span aria-hidden="true">⌖</span>';
@@ -299,7 +307,7 @@
       choose.setAttribute("aria-pressed", Number(state.doctor_id) === doctor.doctorID ? "true" : "false");
       choose.addEventListener("click", () => selectDoctor(doctor));
       footer.append(limit, choose);
-      card.append(head, name, speciality, location, footer);
+      card.append(head, name, speciality, schedule, location, footer);
       return card;
     }
 

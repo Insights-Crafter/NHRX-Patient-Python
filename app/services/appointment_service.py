@@ -55,14 +55,27 @@ class AppointmentService:
             raise HTTPException(status_code=422, detail="Appointment date must be today or later")
 
     @staticmethod
+    def _schedule_time(value: str | time) -> time:
+        """Parse a timing stored as TEXT (HH:MM or HH:MM:SS)."""
+        if isinstance(value, time):
+            return value
+        try:
+            return time.fromisoformat(value.strip())
+        except (AttributeError, ValueError) as exc:
+            raise HTTPException(
+                status_code=500,
+                detail="Doctor schedule contains an invalid time; expected HH:MM or HH:MM:SS",
+            ) from exc
+
+    @staticmethod
     def _slot_is_scheduled(start: time, schedule) -> bool:
         if start.second or start.microsecond or (start.minute % 30):
             return False
         slot_start = datetime.combine(date.min, start)
         slot_end = slot_start + SLOT_LENGTH
         return any(
-            slot_start >= datetime.combine(date.min, row.start_time)
-            and slot_end <= datetime.combine(date.min, row.end_time)
+            slot_start >= datetime.combine(date.min, AppointmentService._schedule_time(row.startTime))
+            and slot_end <= datetime.combine(date.min, AppointmentService._schedule_time(row.endTime))
             for row in schedule
         )
 
@@ -76,8 +89,8 @@ class AppointmentService:
         booked = self.appointments.get_booked_times(doctor_id, appointment_date)
         available: set[time] = set()
         for row in schedule:
-            current = datetime.combine(appointment_date, row.start_time)
-            end = datetime.combine(appointment_date, row.end_time)
+            current = datetime.combine(appointment_date, self._schedule_time(row.startTime))
+            end = datetime.combine(appointment_date, self._schedule_time(row.endTime))
             minute_of_day = current.hour * 60 + current.minute
             rounded_minute = ((minute_of_day + 29) // 30) * 30
             if rounded_minute >= 24 * 60:

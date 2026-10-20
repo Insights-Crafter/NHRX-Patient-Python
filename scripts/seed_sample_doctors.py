@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 from database.database import SessionLocal  # noqa: E402
 from models.DoctorAvailbilityModel import DoctorAvailability  # noqa: E402
-from models.DoctorDummyModel import DoctorDummy  # noqa: E402
+from models.DoctorModel import Doctor  # noqa: E402
 from models.DoctorSpecialities import Specialities  # noqa: E402
 from models.HospitalModel import Hospital  # noqa: E402
 
@@ -38,9 +38,9 @@ def seed_sample_doctors() -> tuple[int, int]:
     skipped = 0
     try:
         specialities = {
-            row.specialityName.casefold(): row
+            row.name.casefold(): row
             for row in session.query(Specialities).all()
-            if row.specialityName
+            if row.name
         }
         hospitals = {
             (row.hospitalName.casefold(), (row.City or "").casefold()): row
@@ -51,7 +51,7 @@ def seed_sample_doctors() -> tuple[int, int]:
         for name, speciality_name, hospital_name, city, experience, daily_limit in SAMPLE_DOCTORS:
             speciality = specialities.get(speciality_name.casefold())
             if speciality is None:
-                speciality = Specialities(specialityName=speciality_name)
+                speciality = Specialities(name=speciality_name)
                 session.add(speciality)
                 session.flush()
                 specialities[speciality_name.casefold()] = speciality
@@ -65,11 +65,11 @@ def seed_sample_doctors() -> tuple[int, int]:
                 hospitals[hospital_key] = hospital
 
             existing = (
-                session.query(DoctorDummy)
+                session.query(Doctor)
                 .filter(
-                    DoctorDummy.Name == name,
-                    DoctorDummy.specialityID == speciality.specialityID,
-                    DoctorDummy.hospitalID == hospital.hospitalID,
+                    Doctor.name == name,
+                    Doctor.specialtyId == speciality.id,
+                    Doctor.hospitalId == hospital.hospitalID,
                 )
                 .first()
             )
@@ -77,28 +77,28 @@ def seed_sample_doctors() -> tuple[int, int]:
                 skipped += 1
                 continue
 
-            doctor = DoctorDummy(
-                Name=name,
-                YearsofExperience=experience,
-                DailyPatientLimit=daily_limit,
-                specialityID=speciality.specialityID,
-                hospitalID=hospital.hospitalID,
+            doctor = Doctor(
+                name=name,
+                yearsofExperience=experience,
+                dailyPatientLimit=daily_limit,
+                specialtyId=speciality.id,
+                hospitalId=hospital.hospitalID,
             )
             session.add(doctor)
             session.flush()
             session.add_all(
                 [
                     DoctorAvailability(
-                        doctorID=doctor.doctorID,
+                        doctorId=doctor.id,
                         day="Monday",
-                        start_time=time(9, 0),
-                        end_time=time(13, 0),
+                        startTime="09:00",
+                        endTime="13:00",
                     ),
                     DoctorAvailability(
-                        doctorID=doctor.doctorID,
+                        doctorId=doctor.id,
                         day="Wednesday",
-                        start_time=time(14, 0),
-                        end_time=time(18, 0),
+                        startTime="14:00",
+                        endTime="18:00",
                     ),
                 ]
             )
