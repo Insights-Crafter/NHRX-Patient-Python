@@ -173,6 +173,12 @@ a:hover { color: var(--teal-dark); }
 .directory-hero-art svg path:nth-of-type(2) { fill: #d9a94b; stroke: #d9a94b; stroke-width: 1; }
 .directory-hero-art svg path:last-of-type { fill: none; stroke: #fff; stroke-linecap: round; stroke-width: 1.5; }
 .directory-panel { margin-top: 20px; padding: 25px 27px 23px; border: 1px solid #e5ece8; border-radius: 14px; background: #fff; box-shadow: var(--shadow); }
+.directory-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; align-items: start; gap: 18px; margin-top: 20px; }
+.directory-layout > .directory-panel { min-width: 0; margin-top: 0; }
+.directory-layout .doctor-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.directory-layout .search-field { grid-column: 1 / -1; }
+.directory-layout .filter-submit { width: 100%; }
+.directory-layout .clear-filters { min-width: 0; justify-self: center; white-space: normal; }
 .directory-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 19px; }
 .directory-panel-heading h2 { margin: 6px 0 0; color: #2c433b; font: 700 19px Manrope, sans-serif; letter-spacing: -.45px; }
 .directory-secure { display: inline-flex; align-items: center; gap: 7px; color: #809087; font-size: 10px; }
@@ -197,6 +203,7 @@ a:hover { color: var(--teal-dark); }
 .doctor-experience { color: #75877e; font-size: 10px; }
 .doctor-card h3 { margin: 15px 0 5px; color: #2d443c; font: 700 15px Manrope, sans-serif; overflow-wrap: anywhere; }
 .doctor-speciality { margin: 0; color: var(--teal); font-size: 11px; font-weight: 700; }
+.doctor-timings { margin: 5px 0 0; color: #75877e; font-size: 10px; line-height: 1.5; }
 .doctor-location { display: flex; align-items: baseline; gap: 4px; margin: 10px 0 14px; color: #809087; font-size: 10px; line-height: 1.5; }
 .doctor-location span { color: #bd9141; font-size: 15px; }
 .doctor-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 11px; border-top: 1px solid #eef2ef; }
@@ -228,18 +235,21 @@ a:hover { color: var(--teal-dark); }
 .directory-pagination .button { min-height: 37px; padding: 0 13px; font-size: 10px; }
 .directory-pagination .button:disabled { cursor: default; opacity: .5; }
 .directory-pagination span { color: #74857c; font-size: 10px; }
-.selected-doctor { display: flex; align-items: center; gap: 15px; margin-top: 17px; padding: 19px 22px; border: 1px solid #dceae2; border-radius: 12px; background: #edf5f0; }
+.selected-doctor { position: sticky; top: 20px; display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin-top: 0; padding: 20px; border: 1px solid #dceae2; border-radius: 12px; background: #edf5f0; }
 .selected-mark { display: grid; width: 40px; height: 40px; flex: none; place-items: center; border-radius: 12px; background: #fff; }
 .selected-mark svg { width: 25px; height: 25px; fill: none; stroke: #478879; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
-.selected-copy { flex: 1; }
+.selected-copy { min-width: 0; flex: none; }
 .selected-copy h2 { margin: 4px 0; color: #2c433b; font: 700 14px Manrope, sans-serif; }
 .selected-copy p { max-width: 650px; margin: 0; color: #71847a; font-size: 10px; line-height: 1.55; }
-.booking-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; margin-top: 15px; }
+.booking-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 11px; margin-top: 15px; }
 .booking-form label { display: grid; gap: 5px; color: #536b60; font-size: 11px; font-weight: 700; }
 .booking-form input, .booking-form select, .booking-form textarea, .reschedule-controls input, .reschedule-controls select { min-width: 0; min-height: 38px; padding: 8px 10px; border: 1px solid #d8e4dd; border-radius: 7px; background: #fff; color: #344a41; font: inherit; }
-.booking-form .booking-complaint { grid-column: 1 / -1; }
+.booking-form .booking-complaint { grid-column: auto; }
 .booking-form textarea { min-height: 70px; resize: vertical; }
 .booking-form button { justify-self: start; }
+.selected-doctor > .clear-filters { align-self: flex-end; margin: 0; }
+#remove-selection { align-self: stretch; width: 100%; min-height: 42px; margin-top: 2px; border: 1px solid #9fc8b8; border-radius: 8px; background: #fff; color: #176b62; font-size: 12px; font-weight: 700; text-align: center; }
+#remove-selection:hover { border-color: #176b62; background: #e2f1ea; color: #10584f; text-decoration: none; }
 .appointments-panel { margin: 18px 0 20px; }
 .appointments-panel > #appointments-status { margin: 0 0 12px; color: #71847a; font-size: 13px; }
 .appointments-list { display: grid; gap: 10px; }
@@ -271,6 +281,8 @@ a:hover { color: var(--teal-dark); }
 .entry-loading a { font-size: 12px; font-weight: 700; }
 
 @media (max-width: 900px) {
+  .directory-layout { grid-template-columns: minmax(0, 1fr); }
+  .selected-doctor { position: static; }
   .topbar, .dashboard-topbar { padding-right: 24px; padding-left: 24px; }
   .welcome-panel { padding-left: 42px; padding-right: 38px; }
   .welcome-panel h1 { font-size: 37px; }
@@ -337,18 +349,21 @@ a:hover { color: var(--teal-dark); }
   .directory-secure { padding-top: 3px; font-size: 9px; }
   .doctor-filters { grid-template-columns: minmax(0, 1fr); gap: 9px; padding: 10px; }
   .search-field { grid-column: auto; }
+  .directory-layout .doctor-filters { grid-template-columns: minmax(0, 1fr); }
+  .directory-layout .search-field { grid-column: auto; }
   .filter-submit { width: 100%; }
   .clear-filters { justify-self: center; }
   .doctor-card-grid { grid-template-columns: minmax(0, 1fr); }
   .doctor-card { min-height: 205px; }
   .directory-error { align-items: flex-start; flex-wrap: wrap; }
   .directory-error .button { width: 100%; margin-left: 46px; }
-  .selected-doctor { align-items: flex-start; flex-wrap: wrap; padding: 16px; }
+  .selected-doctor { display: block; padding: 16px; }
   .booking-form { grid-template-columns: 1fr; }
   .booking-form .booking-complaint { grid-column: auto; }
   .appointment-card { flex-direction: column; }
-  .selected-copy { min-width: calc(100% - 60px); }
-  .selected-doctor > .clear-filters { margin-left: 52px; }
+  .selected-mark { margin-bottom: 10px; }
+  .selected-copy { min-width: 0; }
+  .selected-doctor > .clear-filters { margin: 12px 0 0; }
   .back-link { margin-bottom: 22px; }
   .settings-heading h1 { font-size: 27px; }
   .settings-card { padding: 22px 18px; }

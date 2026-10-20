@@ -27,7 +27,21 @@ from routes.AppointmentRoutes import router as appointment_router
 async def lifespan(app: FastAPI):
     """Optionally create missing tables for local development."""
     if os.getenv("CREATE_DB_TABLES", "false").strip().lower() in {"1", "true", "yes"}:
-        Base.metadata.create_all(bind=engine)
+        # These legacy doctor-directory tables are intentionally retired.
+        # Appointments references the retired Doctor table, so it is omitted
+        # from startup creation along with the doctor directory tables.
+        retired_tables = {
+            "Specialities",
+            "DoctorTimings",
+            "Doctor",
+            "Appointments",
+        }
+        tables_to_create = [
+            table
+            for table in Base.metadata.sorted_tables
+            if table.name not in retired_tables
+        ]
+        Base.metadata.create_all(bind=engine, tables=tables_to_create)
     yield
 
 

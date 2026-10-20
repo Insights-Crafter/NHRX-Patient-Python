@@ -13,7 +13,7 @@ from .recordSymptomsModel import RecordSymptom
 from .RecordTests import MedicalRecordTest
 from .symptoms import Symptom
 
-from .DoctorDummyModel import DoctorDummy
+from .DoctorModel import Doctor
 from .HospitalModel import Hospital
 from .DoctorSpecialities import Specialities
 from .DoctorAvailbilityModel import DoctorAvailability
@@ -33,7 +33,7 @@ __all__ = [
     "RecordSymptom",
     "MedicalRecordTest",
     "Symptom",
-    "DoctorDummy",
+    "Doctor",
     "Hospital",
     "Specialities",
     "DoctorAvailability",

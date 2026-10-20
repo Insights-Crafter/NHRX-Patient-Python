@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from models.DoctorDummyModel import DoctorDummy
+from models.DoctorModel import Doctor
 from models.DoctorSpecialities import Specialities
 from models.HospitalModel import Hospital
 
@@ -24,40 +24,38 @@ class DoctorRepository:
         """Return doctor directory rows matching the requested filters."""
         statement = (
             select(
-                DoctorDummy.doctorID.label("doctorID"),
-                DoctorDummy.Name.label("Name"),
-                DoctorDummy.YearsofExperience.label("YearsofExperience"),
-                DoctorDummy.DailyPatientLimit.label("DailyPatientLimit"),
-                Specialities.specialityID.label("specialityID"),
-                Specialities.specialityName.label("specialityName"),
+                Doctor.id.label("doctorID"),
+                Doctor.name.label("Name"),
+                Doctor.yearsofExperience.label("YearsofExperience"),
+                Doctor.dailyPatientLimit.label("DailyPatientLimit"),
+                Specialities.id.label("specialityID"),
+                Specialities.name.label("specialityName"),
                 Hospital.hospitalID.label("hospitalID"),
                 Hospital.hospitalName.label("hospitalName"),
                 Hospital.City.label("City"),
             )
-            .select_from(DoctorDummy)
-            .outerjoin(
-                Specialities,
-                DoctorDummy.specialityID == Specialities.specialityID,
-            )
-            .outerjoin(Hospital, DoctorDummy.hospitalID == Hospital.hospitalID)
+            .select_from(Doctor)
+            .outerjoin(Specialities, Doctor.specialtyId == Specialities.id)
+            .outerjoin(Hospital, Doctor.hospitalId == Hospital.hospitalID)
         )
 
         if search and search.strip():
             term = f"%{search.strip()}%"
             statement = statement.where(
-                DoctorDummy.Name.ilike(term)
-                | Specialities.specialityName.ilike(term)
+                Doctor.name.ilike(term)
+                | Specialities.name.ilike(term)
                 | Hospital.hospitalName.ilike(term)
+                | Hospital.City.ilike(term)
             )
         if speciality_id is not None:
-            statement = statement.where(DoctorDummy.specialityID == speciality_id)
+            statement = statement.where(Doctor.specialtyId == speciality_id)
         if city and city.strip():
             statement = statement.where(
                 func.lower(func.trim(Hospital.City)) == city.strip().lower()
             )
 
         statement = (
-            statement.order_by(func.lower(DoctorDummy.Name))
+            statement.order_by(func.lower(Doctor.name))
             .limit(limit)
             .offset(offset)
         )

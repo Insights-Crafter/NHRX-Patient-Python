@@ -8,7 +8,7 @@ class Appointments(Base):
 
     AppointmentID = Column(Integer, primary_key=True)
     patientID = Column(Integer,ForeignKey("Patients.patientID"))
-    DoctorID = Column(Integer,ForeignKey("Doctor_Dummy.doctorID"))
+    DoctorID = Column(Integer, ForeignKey("Doctor.id"))
     AppointmentDate = Column(DATE)
     AppointmentTime = Column(TIME)
     Complaint = Column(String)

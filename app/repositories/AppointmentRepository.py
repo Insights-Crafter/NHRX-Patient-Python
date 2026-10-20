@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from models.AppointmentModel import Appointments
 from models.DoctorAvailbilityModel import DoctorAvailability
-from models.DoctorDummyModel import DoctorDummy
+from models.DoctorModel import Doctor
 from models.DoctorSpecialities import Specialities
 from models.HospitalModel import Hospital
 
@@ -17,16 +17,16 @@ class AppointmentRepository:
         self.db = db
 
     def find_doctor(self, doctor_id: int, *, lock: bool = False):
-        statement = select(DoctorDummy).where(DoctorDummy.doctorID == doctor_id)
+        statement = select(Doctor).where(Doctor.id == doctor_id)
         if lock:
             statement = statement.with_for_update()
         return self.db.scalar(statement)
 
     def get_doctor_schedule(self, doctor_id: int, day: str) -> list[DoctorAvailability]:
         statement = select(DoctorAvailability).where(
-            DoctorAvailability.doctorID == doctor_id,
+            DoctorAvailability.doctorId == doctor_id,
             DoctorAvailability.day.ilike(day),
-        ).order_by(DoctorAvailability.start_time)
+        ).order_by(DoctorAvailability.startTime)
         return list(self.db.scalars(statement).all())
 
     def get_booked_times(self, doctor_id: int, appointment_date: date) -> set[time]:
@@ -45,14 +45,14 @@ class AppointmentRepository:
         statement = (
             select(
                 Appointments,
-                DoctorDummy.Name.label("doctorName"),
-                Specialities.specialityName.label("specialityName"),
+                Doctor.name.label("doctorName"),
+                Specialities.name.label("specialityName"),
                 Hospital.hospitalName.label("hospitalName"),
                 Hospital.City.label("City"),
             )
-            .join(DoctorDummy, Appointments.DoctorID == DoctorDummy.doctorID)
-            .outerjoin(Specialities, DoctorDummy.specialityID == Specialities.specialityID)
-            .outerjoin(Hospital, DoctorDummy.hospitalID == Hospital.hospitalID)
+            .join(Doctor, Appointments.DoctorID == Doctor.id)
+            .outerjoin(Specialities, Doctor.specialtyId == Specialities.id)
+            .outerjoin(Hospital, Doctor.hospitalId == Hospital.hospitalID)
             .where(Appointments.patientID == patient_id)
             .order_by(Appointments.AppointmentDate, Appointments.AppointmentTime)
         )
