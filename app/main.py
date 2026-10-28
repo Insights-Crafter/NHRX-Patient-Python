@@ -14,39 +14,46 @@ if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
 from database.database import Base, engine
-import models 
-from routes.PatientRegRoutes import router as patient_registration_router
-from routes.PatientProfileRoutes import router as patient_profile_router
-from routes.PatientUpdateRoutes import router as patient_update_router
-from routes.Authentication import authRouter
-from routes.DoctorRoutes import router as doctor_router
-from routes.AppointmentRoutes import router as appointment_router
+from Patient import models as patient_models
+from Doctor import models as doctor_models
+from Hospital import models as hospital_models
+from appointments import models as appointment_models
+from Patient.routes.PatientRegRoutes import router as patient_registration_router
+from Patient.routes.PatientProfileRoutes import router as patient_profile_router
+from Patient.routes.PatientUpdateRoutes import router as patient_update_router
+from Patient.routes.Authentication import authRouter
+from Doctor.routes.DoctorRoutes import router as doctor_router
+from Hospital.routes.HospitalRoute import routerHospital as hospital_router
+from appointments.routes.AppointmentRoutes import router as appointment_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Optionally create missing tables for local development."""
+    """Create doctor tables after deployment, or all tables when requested."""
     if os.getenv("CREATE_DB_TABLES", "false").strip().lower() in {"1", "true", "yes"}:
-        # These legacy doctor-directory tables are intentionally retired.
-        # Appointments references the retired Doctor table, so it is omitted
-        # from startup creation along with the doctor directory tables.
-        retired_tables = {
+        Base.metadata.create_all(bind=engine)
+    else:
+        # These tables were dropped to be rebuilt. Keep regular startup scoped
+        # to the doctor directory and its appointment table; patient schemas
+        # remain managed separately.
+        doctor_table_names = {
             "Specialities",
-            "DoctorTimings",
+            "Hospitals",
             "Doctor",
+            "DoctorTimings",
             "Appointments",
         }
-        tables_to_create = [
+        doctor_tables = [
             table
             for table in Base.metadata.sorted_tables
-            if table.name not in retired_tables
+            if table.name in doctor_table_names
         ]
-        Base.metadata.create_all(bind=engine, tables=tables_to_create)
+        Base.metadata.create_all(bind=engine, tables=doctor_tables)
     yield
 
 
 app = FastAPI(
-    title="NHRX Patient API",
+    title="NHRX API",
     lifespan=lifespan,
 )
 
@@ -65,9 +72,10 @@ app.include_router(patient_profile_router)
 app.include_router(patient_update_router)
 app.include_router(authRouter)
 app.include_router(doctor_router)
+app.include_router(hospital_router)
 app.include_router(appointment_router)
 
 
 @app.get("/", tags=["health"])
 def read_root():
-    return {"status": "ok", "message": "NHRX Patient API is running"}
+    return {"status": "ok", "message": "NHRX API is running"}

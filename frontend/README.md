@@ -20,4 +20,6 @@ The UI uses native browser constraints plus shared JavaScript validation before 
 
 ## Local API connection
 
-During local frontend development, `config.js` points to FastAPI at `http://localhost:8000`. When served by the Nginx container, it uses the same-origin `/api` proxy configured in `nginx.conf`, which forwards requests to the backend container. For a different local backend port, update `window.NHRX_API_BASE` in `config.js`.
+`config.js` uses the same-origin `/api` proxy configured in `nginx.conf`, which forwards requests to the backend container. For local development with VS Code Live Server and a directly running FastAPI server, temporarily set `window.NHRX_API_BASE` to `http://localhost:8000` in `config.js`.
+
+For a teammate running a frontend on their own computer, set that frontend's API base to `http://<EC2_PUBLIC_IP>/api` (for this EC2 instance: `http://13.127.82.104/api`). Nginx removes `/api` when forwarding to FastAPI, so routes remain `/doctors`, `/doctors/filters`, `/patients/...`, and `/appointments/...`. FastAPI currently allows browser origins on `localhost` and `127.0.0.1`; a deployed frontend on another hostname must be added to the CORS allowlist. Use HTTPS before sending real patient data.

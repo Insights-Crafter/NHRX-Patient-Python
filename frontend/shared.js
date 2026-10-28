@@ -1,4 +1,4 @@
-const API_BASE = (window.NHRX_API_BASE || "http://localhost:8000").replace(/\/$/, "");
+const API_BASE = (window.NHRX_API_BASE || "/api").replace(/\/$/, "");
 const busyButtonMarkup = new WeakMap();
 
 async function apiRequest(path, options = {}) {

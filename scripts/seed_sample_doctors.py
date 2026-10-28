@@ -10,10 +10,10 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 from database.database import SessionLocal  # noqa: E402
-from models.DoctorAvailbilityModel import DoctorAvailability  # noqa: E402
-from models.DoctorModel import Doctor  # noqa: E402
-from models.DoctorSpecialities import Specialities  # noqa: E402
-from models.HospitalModel import Hospital  # noqa: E402
+from Doctor.models.DoctorAvailbilityModel import DoctorAvailability  # noqa: E402
+from Doctor.models.DoctorModel import Doctor  # noqa: E402
+from Doctor.models.DoctorSpecialities import Specialities  # noqa: E402
+from Hospital.models.HospitalModel import Hospital  # noqa: E402
 
 
 SAMPLE_DOCTORS = [
