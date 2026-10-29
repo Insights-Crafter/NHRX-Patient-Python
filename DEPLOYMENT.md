@@ -5,7 +5,7 @@ This guide packages the existing plain HTML/CSS/JavaScript portal and FastAPI ba
 ## What was inspected
 
 - Frontend: static files in `frontend/`; entry page `index.html` redirects to `login.html`.
-- Backend: `app.main:app`, served by Uvicorn. Existing routes are `/auth/login`, `/patients/register`, `/patients/me`, `/patients/me/address`, `/patients/me/updateAdress`, and `/patients/me/updateContact`.
+- Backend: `app.main:app`, served by Uvicorn. All registered patient, doctor, hospital, and appointment routers are proxied through Nginx at the public `/api/` prefix. For example, `/api/doctors`, `/api/doctors/auth/login`, `/api/appointments`, and `/api/patients/register` map to their FastAPI routes. Interactive API documentation is at `/api/docs`.
 - Database: PostgreSQL on the EC2 host through `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`, and `DB_NAME` in `app/database/database.py`. The Compose backend uses `DB_HOST=host.docker.internal`.
 - Secrets: `JWT_SECRET_KEY` signs access tokens. `AES_SIV_KEY` encrypts patient data and must remain compatible with already encrypted values.
 - Auth: the frontend stores the access token in local storage and sends `Authorization: Bearer ...` on authenticated calls.
@@ -24,7 +24,7 @@ docker compose logs --tail=100 backend
 docker compose logs --tail=100 frontend
 ```
 
-Open `http://localhost/`. The API is reached through the same origin: `http://localhost/api/` is proxied to FastAPI's `/` health endpoint; for example, `http://localhost/api/auth/login` maps to `/auth/login` in FastAPI. The backend container has no published host port. Stop the stack with `docker compose down` (this does not delete or modify the external database).
+Open `http://localhost/`. The API is reached through the same origin: `http://localhost/api/` is proxied to FastAPI's `/` health endpoint; for example, `http://localhost/api/doctors` maps to `/doctors` in FastAPI. A remote client can use `http://EC2_PUBLIC_IPV4/api/docs` to inspect and call the API. All routers are exposed through Nginx on port 80 (and port 443 after TLS is configured); the backend container has no published host port. Stop the stack with `docker compose down` (this does not delete or modify the external database).
 
 ## Initial EC2 deployment
 
@@ -75,7 +75,7 @@ nano .env
 chmod 600 .env
 ```
 
-Fill in the PostgreSQL credentials and keys. `.env.example` sets `DB_HOST=host.docker.internal`; Compose maps that name to the EC2 Docker host gateway. Set `CREATE_DB_TABLES=false`. Supply `JWT_SECRET_KEY` securely. If existing encrypted patient data is used, retrieve and preserve the **exact existing** `AES_SIV_KEY`; a new key cannot decrypt old values. Do not put `.env` in Git, paste its contents into logs, or bake it into either image. For a team project, restrict repository and EC2 access and plan a proper secret manager before real production data.
+Fill in the PostgreSQL credentials and keys. `.env.example` sets `DB_HOST=host.docker.internal`; Compose maps that name to the EC2 Docker host gateway. Set `CREATE_DB_TABLES=false`. Supply `JWT_SECRET_KEY` securely. If existing encrypted patient data is used, retrieve and preserve the **exact existing** `AES_SIV_KEY`; a new key cannot decrypt old values. Do not put `.env` in Git, paste its contents into logs, or bake it into either image. For a team project, restrict repository and EC2 access and plan a proper secret manager before real production data. If a browser frontend is hosted on another origin, set `CORS_ORIGINS` to its exact origin (scheme, hostname, and optional port; comma-separate multiple origins). The bundled frontend is same-origin and needs no CORS entry. CORS only affects browsers; command-line and server clients can call public `/api/...` routes directly.
 
 PostgreSQL commonly listens only on `127.0.0.1` initially, which a bridge container cannot reach. Start the Compose stack, then inspect its network and PostgreSQL configuration paths:
 
@@ -125,10 +125,10 @@ The included Nginx configuration provides HTTP only, suitable for initial connec
 1. Develop and test changes locally; review schema changes separately.
 2. Commit and push the intended branch to GitHub.
 3. SSH into EC2 and enter the checkout: `cd ~/nhrx`.
-4. Pull the deployment branch: `git pull origin main` (replace `main` if needed).
-5. For a backend-only code/dependency change: `docker compose up -d --build --force-recreate backend frontend`. Recreate frontend too so Nginx reconnects cleanly to a recreated backend container. For frontend HTML/CSS/JS or Nginx config changes, rebuild `frontend`; if frontend JavaScript changes its `/api` path or proxy contract, coordinate both sides.
-6. For Compose, Dockerfile, shared build-context, or dependency changes, validate and rebuild both: `docker compose config` then `docker compose up -d --build`.
-7. Check `docker compose ps`, logs, `/`, and `/api/` before considering the update complete.
+4. Check for EC2-local changes with `git status --short --branch`, then run `git fetch origin`.
+5. Switch to the deployment branch with `git switch deployment`. If it has not been checked out on EC2 before, use `git switch --track -c deployment origin/deployment` instead. Then update it with `git pull --ff-only origin deployment`.
+6. Validate Compose and rebuild/recreate the services with `docker compose config -q` and `docker compose up -d --build`.
+7. Check `docker compose ps`, `docker compose logs --tail=100 backend frontend`, `curl -fsS http://localhost/`, and `curl -fsS http://localhost/api/` before considering the update complete.
 
 For schema changes, first take and verify a PostgreSQL backup, store encrypted backups off the instance, and practice restoring them. Review an Alembic migration (none is currently configured), apply it deliberately against the intended database, then deploy compatible code. Do not run `Base.metadata.drop_all`, reset the database, or assume a Git rollback reverses a migration. An EBS snapshot alone is not necessarily a database-consistent backup unless PostgreSQL is quiesced or the snapshot process is coordinated. Rollback guidance: redeploy the last known-good application commit/image; restore a database backup only through an approved recovery plan. Some migrations require a forward fix or coordinated code/data rollback, and Git alone cannot restore prior database data.
 

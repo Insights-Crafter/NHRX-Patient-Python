@@ -13,7 +13,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-def create_access_token(user_id: str) -> str:
+def create_access_token(user_id: str, *, role: str | None = None) -> str:
     if not SECRET_KEY_JWT:
         raise RuntimeError("JWT_SECRET_KEY must be configured")
     expires_at = datetime.now(timezone.utc) + timedelta(
@@ -24,6 +24,8 @@ def create_access_token(user_id: str) -> str:
         "sub": user_id,
         "exp": expires_at,
     }
+    if role is not None:
+        payload["role"] = role
 
     return jwt.encode(payload, SECRET_KEY_JWT, algorithm=ALGORITHM)
 

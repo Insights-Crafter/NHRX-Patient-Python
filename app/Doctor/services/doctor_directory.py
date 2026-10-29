@@ -1,8 +1,10 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 
 from Doctor.repositories.doctor_repository import DoctorRepository
 from Doctor.models.DoctorAvailbilityModel import DoctorAvailability
+from Doctor.models.DoctorAuthentication import DoctorAuthentication
 from Doctor.schemas.DoctorSchemas import (
     DoctorCardResponse,
     DoctorFilterOptionsResponse,
@@ -10,6 +12,7 @@ from Doctor.schemas.DoctorSchemas import (
     DoctorCreate,
     DoctorAvailabilityCreate,
     DoctorAvailabilityRead,
+    DoctorPasswordCreated,
 )
 
 from Doctor.models.DoctorModel import Doctor
@@ -72,6 +75,39 @@ class DoctorDirectoryService:
         )
         created = self.doctors.create_availability(availability)
         return DoctorAvailabilityRead.model_validate(created)
+
+    def create_doctor_password(
+        self, doctor_id: int, password: str
+    ) -> DoctorPasswordCreated:
+        if self.doctors.get_doctor(doctor_id) is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Doctor not found",
+            )
+        if self.doctors.get_doctor_authentication(doctor_id) is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A password is already configured for this doctor",
+            )
+
+        authentication = DoctorAuthentication(
+            doctorId=doctor_id,
+            password=password,
+        )
+        try:
+            self.doctors.create_doctor_authentication(authentication)
+        except IntegrityError as exc:
+            # Handles simultaneous setup requests without replacing a password.
+            self.doctors.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A password is already configured for this doctor",
+            ) from exc
+
+        return DoctorPasswordCreated(
+            doctorId=doctor_id,
+            message="Doctor password created",
+        )
         
         
 

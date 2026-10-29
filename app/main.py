@@ -40,6 +40,7 @@ async def lifespan(app: FastAPI):
             "Specialities",
             "Hospitals",
             "Doctor",
+            "DoctorAuthentication",
             "DoctorTimings",
             "Appointments",
         }
@@ -58,10 +59,17 @@ app = FastAPI(
 )
 
 # Allow local browser frontends (for example, VS Code Live Server) to call
-# FastAPI directly at http://localhost:8000 during development.
+# FastAPI directly during development, plus explicitly configured deployed
+# frontend origins. Same-origin requests through Nginx need no CORS entry.
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

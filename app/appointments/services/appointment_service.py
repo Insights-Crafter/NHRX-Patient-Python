@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 from appointments.models.AppointmentModel import Appointments
 from Patient.models.PatientModel import Patient
 from appointments.repositories.AppointmentRepository import AppointmentRepository
-from appointments.schemas.AppointmentSchema import AppointmentCreate, AppointmentReschedule
+from appointments.schemas.AppointmentSchema import (
+    AppointmentCreate,
+    AppointmentReschedule,
+    DoctorAppointmentResponse,
+    DoctorPatientDetails,
+)
 from utilityfunctions.encryption import EncryptionService
 
 
@@ -143,6 +148,42 @@ class AppointmentService:
         for appointment in appointments:
             appointment["Complaint"] = self._decrypt_complaint(appointment["Complaint"])
         return appointments
+
+    def list_doctor_appointments_for_today(
+        self, doctor_id: int
+    ) -> list[DoctorAppointmentResponse]:
+        if self.appointments.find_doctor(doctor_id) is None:
+            raise HTTPException(status_code=404, detail="Doctor not found")
+
+        todays_appointments = self.appointments.list_for_doctor_on_date(
+            doctor_id, date.today()
+        )
+        responses = []
+        for item in todays_appointments:
+            first_name = self.encryption.decrypt(
+                item["patientFirstName"], "firstName"
+            )
+            last_name = self.encryption.decrypt(
+                item["patientLastName"], "lastName"
+            )
+            responses.append(
+                DoctorAppointmentResponse(
+                    appointmentDate=item["appointmentDate"],
+                    appointmentTime=item["appointmentTime"],
+                    complaint=self._decrypt_complaint(item["complaint"]),
+                    patient=DoctorPatientDetails(
+                        name=" ".join(part for part in (first_name, last_name) if part),
+                        dateOfBirth=self.encryption.decrypt(
+                            item["patientDateOfBirth"], "date_of_birth"
+                        ),
+                        gender=self.encryption.decrypt(item["patientGender"], "gender"),
+                        bloodGroup=self.encryption.decrypt(
+                            item["patientBloodGroup"], "blood_group"
+                        ),
+                    ),
+                )
+            )
+        return responses
 
     def cancel_appointment(self, patient_id: int, appointment_id: int) -> None:
         appointment = self.appointments.find_patient_appointment(

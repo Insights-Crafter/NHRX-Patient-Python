@@ -8,6 +8,7 @@ from Doctor.models.DoctorAvailbilityModel import DoctorAvailability
 from Doctor.models.DoctorModel import Doctor
 from Doctor.models.DoctorSpecialities import Specialities
 from Hospital.models.HospitalModel import Hospital
+from Patient.models.PatientModel import Patient
 
 
 class AppointmentRepository:
@@ -73,6 +74,29 @@ class AppointmentRepository:
             }
             for row in results
         ]
+
+    def list_for_doctor_on_date(
+        self, doctor_id: int, appointment_date: date
+    ) -> list[dict]:
+        statement = (
+            select(
+                Appointments.AppointmentDate.label("appointmentDate"),
+                Appointments.AppointmentTime.label("appointmentTime"),
+                Appointments.Complaint.label("complaint"),
+                Patient.firstName.label("patientFirstName"),
+                Patient.lastName.label("patientLastName"),
+                Patient.date_of_birth.label("patientDateOfBirth"),
+                Patient.gender.label("patientGender"),
+                Patient.blood_group.label("patientBloodGroup"),
+            )
+            .join(Patient, Patient.patientID == Appointments.patientID)
+            .where(
+                Appointments.DoctorID == doctor_id,
+                Appointments.AppointmentDate == appointment_date,
+            )
+            .order_by(Appointments.AppointmentTime, Appointments.AppointmentID)
+        )
+        return [dict(row) for row in self.db.execute(statement).mappings().all()]
 
     def find_patient_appointment(self, patient_id: int, appointment_id: int, *, lock: bool = False):
         statement = select(Appointments).where(

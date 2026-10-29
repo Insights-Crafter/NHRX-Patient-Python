@@ -8,6 +8,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    SecretStr,
     field_validator,
     model_validator,
 )
@@ -83,6 +84,28 @@ class DoctorAvailabilityRead(BaseModel):
     day: str | None
     start_time: time | None = Field(validation_alias="startTime")
     end_time: time | None = Field(validation_alias="endTime")
+
+
+class DoctorPasswordCreate(BaseModel):
+    """Password set during an administrator-controlled doctor account setup."""
+
+    password: SecretStr = Field(min_length=8, max_length=128)
+
+
+class DoctorPasswordCreated(BaseModel):
+    doctorId: int
+    message: str
+
+
+class DoctorLoginRequest(BaseModel):
+    doctorId: int = Field(gt=0)
+    password: SecretStr = Field(min_length=8, max_length=128)
+
+
+class DoctorTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
 
 
 class SpecialityCreate(BaseModel):

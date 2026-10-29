@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from Doctor.models.DoctorAvailbilityModel import DoctorAvailability
+from Doctor.models.DoctorAuthentication import DoctorAuthentication
 from Doctor.models.DoctorModel import Doctor
 from Doctor.models.DoctorSpecialities import Specialities
 from Doctor.schemas.DoctorSchemas import DoctorCreate
@@ -44,11 +45,29 @@ class DoctorRepository:
         self.db.refresh(doctor)
         return doctor
 
+    
+
     def create_availability(self, availability: DoctorAvailability) -> DoctorAvailability:
         self.db.add(availability)
         self.db.commit()
         self.db.refresh(availability)
         return availability
+
+    def get_doctor_authentication(
+        self, doctor_id: int
+    ) -> DoctorAuthentication | None:
+        return self.db.get(DoctorAuthentication, doctor_id)
+
+    def doctor_authentication_exists(self, doctor_id: int) -> bool:
+        return self.get_doctor_authentication(doctor_id) is not None
+
+    def create_doctor_authentication(
+        self, authentication: DoctorAuthentication
+    ) -> DoctorAuthentication:
+        self.db.add(authentication)
+        self.db.commit()
+        self.db.refresh(authentication)
+        return authentication
 
     def search_doctors(
         self,

@@ -42,6 +42,20 @@ class AppointmentDetail(AppointmentResponse):
     City: str | None = None
 
 
+class DoctorPatientDetails(BaseModel):
+    name: str
+    dateOfBirth: str | None = None
+    gender: str | None = None
+    bloodGroup: str | None = None
+
+
+class DoctorAppointmentResponse(BaseModel):
+    appointmentDate: date
+    appointmentTime: time
+    complaint: str | None = None
+    patient: DoctorPatientDetails
+
+
 class AppointmentUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
