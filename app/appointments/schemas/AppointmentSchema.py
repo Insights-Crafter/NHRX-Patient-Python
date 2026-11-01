@@ -29,6 +29,8 @@ class AppointmentResponse(BaseModel):
     AppointmentID: int
     patientID: int
     DoctorID: int
+    nationalID: str
+    phone: str
     AppointmentDate: date
     AppointmentTime: time
     Complaint: str
@@ -54,6 +56,8 @@ class DoctorAppointmentResponse(BaseModel):
     appointmentTime: time
     complaint: str | None = None
     patient: DoctorPatientDetails
+    nationalID: str
+    phone: str
 
 
 class AppointmentUpdate(BaseModel):

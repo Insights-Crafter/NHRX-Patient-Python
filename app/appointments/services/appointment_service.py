@@ -170,6 +170,10 @@ class AppointmentService:
                 DoctorAppointmentResponse(
                     appointmentDate=item["appointmentDate"],
                     appointmentTime=item["appointmentTime"],
+                    phone=self.encryption.decrypt(item["patientcontact"], "phone"),
+                    nationalID=self.encryption.decrypt(
+                        item["patientnationalID"], "nationalID"
+                    ),
                     complaint=self._decrypt_complaint(item["complaint"]),
                     patient=DoctorPatientDetails(
                         name=" ".join(part for part in (first_name, last_name) if part),

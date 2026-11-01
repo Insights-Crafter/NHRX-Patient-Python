@@ -88,6 +88,8 @@ class AppointmentRepository:
                 Patient.date_of_birth.label("patientDateOfBirth"),
                 Patient.gender.label("patientGender"),
                 Patient.blood_group.label("patientBloodGroup"),
+                Patient.nationalID.label("patientnationalID"),
+                Patient.phone.label("patientcontact")
             )
             .join(Patient, Patient.patientID == Appointments.patientID)
             .where(
