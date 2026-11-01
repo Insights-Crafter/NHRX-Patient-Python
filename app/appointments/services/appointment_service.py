@@ -133,6 +133,7 @@ class AppointmentService:
                 AppointmentTime=request.AppointmentTime,
                 Complaint=self._encrypt_complaint(request.Complaint),
                 Booked_at=datetime.now(),
+                Status = "Pending"
             )
             self.appointments.create(appointment)
             self.db.commit()
