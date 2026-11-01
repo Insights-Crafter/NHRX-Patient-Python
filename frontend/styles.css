@@ -263,6 +263,10 @@ a:hover { color: var(--teal-dark); }
 .reschedule-controls input, .reschedule-controls select { min-height: 34px; font-size: 11px; }
 .appointment-card > .button { flex: none; }
 .appointment-widgets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.appointment-dashboard { width: min(100%, 960px); margin-right: auto; margin-left: auto; }
+.appointment-dashboard .section-heading { flex-direction: column; align-items: center; text-align: center; }
+.appointment-dashboard .section-heading > p { margin-top: 2px; }
+.account-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 720px; margin: 0 auto; }
 .appointment-widget { position: relative; display: flex; min-height: 205px; flex-direction: column; align-items: flex-start; padding: 21px; overflow: hidden; border: 1px solid #e2ebe5; border-radius: 13px; background: #fff; box-shadow: 0 8px 22px rgba(31, 65, 52, .045); transition: transform .18s, box-shadow .18s, border-color .18s; }
 .appointment-widget:hover { transform: translateY(-3px); border-color: #bdd8ca; box-shadow: 0 14px 30px rgba(31, 65, 52, .09); text-decoration: none; }
 .appointment-widget-primary { border-color: #c5ded1; background: linear-gradient(145deg, #edf6f0, #fff 80%); }
