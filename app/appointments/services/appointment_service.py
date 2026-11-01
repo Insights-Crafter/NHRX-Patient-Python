@@ -48,6 +48,7 @@ class AppointmentService:
             "AppointmentTime": appointment.AppointmentTime,
             "Complaint": self._decrypt_complaint(appointment.Complaint),
             "Booked_at": appointment.Booked_at,
+            "Status": appointment.Status,
         }
 
     def _require_patient(self, patient_id: int) -> None:

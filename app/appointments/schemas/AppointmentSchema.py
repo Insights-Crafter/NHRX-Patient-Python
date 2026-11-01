@@ -29,12 +29,13 @@ class AppointmentResponse(BaseModel):
     AppointmentID: int
     patientID: int
     DoctorID: int
-    nationalID: str
-    phone: str
+    nationalID: str | None = None
+    phone: str | None = None
     AppointmentDate: date
     AppointmentTime: time
-    Complaint: str
+    Complaint: str | None = None
     Booked_at: datetime | None
+    Status: str | None = None
 
 
 class AppointmentDetail(AppointmentResponse):

@@ -12,18 +12,25 @@
   </header>
   <main class="dashboard-main">
     <section class="dashboard-welcome"><div><div class="eyebrow">PATIENT OVERVIEW</div><h1>Welcome, <span id="patient-first-name">there</span>.</h1><p>Your personal NHRX space for managing the details connected to your care.</p></div><div class="welcome-symbol"><img src="nhrx-mark.svg" alt=""></div></section>
+    <section class="section-block appointment-dashboard" aria-labelledby="appointment-widgets-title">
+      <div class="section-heading"><div><div class="eyebrow">YOUR CARE</div><h2 id="appointment-widgets-title">Appointments</h2></div><p>Book a visit or review your appointment history.</p></div>
+      <div class="appointment-widgets">
+        <a class="appointment-widget appointment-widget-primary" href="booking.html"><span class="widget-icon" aria-hidden="true">＋</span><span class="widget-label">START HERE</span><strong>Book an appointment</strong><small>Find a doctor and choose an available time.</small><span class="widget-link">Find a doctor <b aria-hidden="true">→</b></span></a>
+        <a class="appointment-widget" href="appointments.html"><span class="widget-icon" aria-hidden="true">◷</span><span class="widget-label">UPCOMING</span><strong>Pending appointments</strong><small id="pending-appointment-count">Loading your appointments…</small><span class="widget-link">View pending <b aria-hidden="true">→</b></span></a>
+        <a class="appointment-widget" href="past-appointments.html"><span class="widget-icon" aria-hidden="true">✓</span><span class="widget-label">HISTORY</span><strong>Past appointments</strong><small>Review completed or rejected appointments.</small><span class="widget-link">View history <b aria-hidden="true">→</b></span></a>
+      </div>
+    </section>
     <section class="section-block"><div class="section-heading"><div><div class="eyebrow">ACCOUNT TOOLS</div><h2>Manage your details</h2></div><p>Choose a section to view or update your information.</p></div>
       <div class="action-grid">
         <a class="action-card" href="contact.html"><span class="action-icon teal-icon" aria-hidden="true">@</span><span class="action-copy"><strong>Contact details</strong><small>Update your phone number and email</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
         <a class="action-card" href="address.html"><span class="action-icon gold-icon" aria-hidden="true">⌂</span><span class="action-copy"><strong>Home address</strong><small>Review or update your address</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
-        <a class="action-card" href="appointments.html"><span class="action-icon violet-icon" aria-hidden="true">◷</span><span class="action-copy"><strong>Book an appointment</strong><small>Find doctors by name, speciality, or city</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
       </div>
     </section>
     <section class="section-block"><div class="section-heading"><div><div class="eyebrow">YOUR ACCOUNT</div><h2>Patient profile</h2></div></div>
       <div class="summary-grid">
         <article class="summary-card profile-summary"><div class="card-icon teal-icon">✦</div><div class="summary-label">PATIENT PROFILE</div><h3 id="patient-full-name">Loading profile…</h3><p>Patient ID <strong id="patient-id">—</strong></p><span class="status-chip"><i></i> Account active</span></article>
         <article class="summary-card"><div class="card-icon green-icon">＋</div><div class="summary-label">HEALTH RECORDS</div><h3>Coming soon</h3><p>Your records will appear here as they become available.</p><div class="progress-track"><span></span></div></article>
-        <article class="summary-card"><div class="card-icon violet-icon">◷</div><div class="summary-label">APPOINTMENTS</div><h3>Coming soon</h3><p>Appointment information will be available in a future update.</p><div class="progress-track violet-track"><span></span></div></article>
+        <article class="summary-card"><div class="card-icon violet-icon">◷</div><div class="summary-label">UPCOMING VISITS</div><h3 id="profile-pending-count">—</h3><p>Appointments currently awaiting your visit.</p><div class="progress-track violet-track"><span></span></div></article>
       </div>
     </section>
     <section class="care-note"><span class="care-note-mark"><img src="nhrx-mark.svg" alt=""></span><div><div class="eyebrow">NHRX PATIENT PORTAL</div><h2>Your care, connected.</h2><p>Keep your contact and address details current so your patient profile stays up to date.</p></div></section>
@@ -33,6 +40,14 @@
     const token = requireToken();
     setActiveNavigation();
     document.querySelector("#signout").addEventListener("click", signOut);
+    if (token) apiRequest("/appointments", { headers: { Authorization: `Bearer ${token}` } }).then((appointments) => {
+      const pending = appointments.filter((item) => String(item.Status || "").toLowerCase() === "pending").length;
+      document.querySelector("#pending-appointment-count").textContent = `${pending} pending appointment${pending === 1 ? "" : "s"}`;
+      document.querySelector("#profile-pending-count").textContent = String(pending);
+    }).catch(() => {
+      document.querySelector("#pending-appointment-count").textContent = "Could not load appointments";
+      document.querySelector("#profile-pending-count").textContent = "—";
+    });
     if (token) apiRequest("/patients/me", { headers: { Authorization: `Bearer ${token}` } }).then((patient) => {
       const firstName = patient.firstName || "Patient";
       const fullName = [patient.firstName, patient.lastName].filter(Boolean).join(" ") || firstName;

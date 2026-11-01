@@ -67,6 +67,7 @@ class AppointmentRepository:
                 "AppointmentTime": row[0].AppointmentTime,
                 "Complaint": row[0].Complaint,
                 "Booked_at": row[0].Booked_at,
+                "Status": row[0].Status,
                 "doctorName": row.doctorName,
                 "specialityName": row.specialityName,
                 "hospitalName": row.hospitalName,

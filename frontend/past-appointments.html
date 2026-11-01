@@ -1,0 +1,27 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8f6"><title>Past appointments | NHRX Patient Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-page">
+  <header class="topbar dashboard-topbar">
+    <a class="brand" href="home.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a>
+    <nav class="main-nav" aria-label="Patient account"><a data-page="home.html" href="home.html">Overview</a><a data-page="appointments.html" href="appointments.html">Appointments</a><a data-page="contact.html" href="contact.html">Contact</a><a data-page="address.html" href="address.html">Address</a></nav>
+    <div class="user-menu"><div class="avatar">P</div><span>My account</span><button class="signout" type="button" onclick="signOut()">Sign out</button></div>
+  </header>
+  <main class="directory-main appointment-list-main">
+    <a class="back-link" href="home.html">← <span>Back to overview</span></a>
+    <section class="directory-hero appointment-list-hero"><div><div class="eyebrow">CARE HISTORY</div><h1>Past appointments</h1><p>Review appointments marked completed or rejected by your care team.</p></div></section>
+    <section class="directory-panel appointments-panel" aria-labelledby="appointments-title">
+      <div class="directory-panel-heading"><div><div class="eyebrow">YOUR CARE</div><h2 id="appointments-title">Appointment history</h2></div><button id="refresh-appointments" class="button secondary" type="button">Refresh</button></div>
+      <p id="appointments-status" aria-live="polite">Loading appointment history…</p>
+      <div id="appointments-list" class="appointments-list"></div>
+      <a class="button primary appointment-list-action" href="booking.html">Book an appointment</a>
+    </section>
+    <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Your care history</footer>
+  </main>
+  <script src="config.js"></script><script src="shared.js"></script><script src="appointment-list.js"></script>
+</body>
+</html>

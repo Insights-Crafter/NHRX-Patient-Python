@@ -9,8 +9,8 @@ The frontend is a responsive patient portal with registration, sign-in, a patien
 - The overview loads the authenticated profile from `GET /patients/me` and links to the account update pages.
 - The address page loads and saves with `GET` and `PATCH /patients/me/address`.
 - The contact page loads and saves with `GET` and `PATCH /patients/me/contact`.
-- The appointments page loads and filters doctors, shows 30-minute availability from `GET /doctors/{doctor_id}/availability`, and books through authenticated `POST /appointments`.
-- Patients can view their bookings with `GET /appointments`, reschedule with `PATCH /appointments/{appointment_id}`, and cancel with `DELETE /appointments/{appointment_id}`. The API scopes appointment changes to the signed-in patient.
+- The booking page filters doctors, shows 30-minute availability from `GET /doctors/{doctor_id}/availability`, and books through authenticated `POST /appointments`.
+- The patient dashboard links to separate pending and past appointment pages. Pending appointments show status and support rescheduling/cancellation; past appointments show completed and rejected records. These pages use `GET /appointments`, `PATCH /appointments/{appointment_id}`, and `DELETE /appointments/{appointment_id}`. The API scopes appointment changes to the signed-in patient.
 
 Availability is generated from the doctor's recurring weekday schedule in `DoctorTimings_Dummy`; each appointment occupies a 30-minute slot. Booking checks availability again before saving, so a slot selected earlier can still be rejected if another patient booked it.
 
@@ -20,6 +20,6 @@ The UI uses native browser constraints plus shared JavaScript validation before 
 
 ## Local API connection
 
-`config.js` uses the same-origin `/api` proxy configured in `nginx.conf`, which forwards requests to the backend container. For local development with VS Code Live Server and a directly running FastAPI server, temporarily set `window.NHRX_API_BASE` to `http://localhost:8000` in `config.js`.
+`config.js` uses the same-origin `/api` proxy configured in `nginx.conf`, which forwards requests to the backend container. The frontend Dockerfile copies all top-level HTML, CSS, JavaScript, and SVG files into Nginx's document root, so `booking.html` and `past-appointments.html` are served as static pages automatically. For local development with VS Code Live Server and a directly running FastAPI server, temporarily set `window.NHRX_API_BASE` to `http://localhost:8000` in `config.js`.
 
 For a separately hosted frontend, set its API base to `https://<API_HOST>/api` (or `http://<EC2_PUBLIC_IP>/api` for an initial connectivity check). Set `CORS_ORIGINS` in the backend `.env` to the exact frontend origin, such as `https://portal.example.com`, then recreate the backend container. Nginx removes `/api` when forwarding, so paths remain `/doctors`, `/patients/...`, and `/appointments/...`. The API is publicly reachable through Nginx on port 80/443; the backend port 8000 stays private to the Compose network. Use HTTPS before sending real patient data.
