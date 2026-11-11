@@ -1,0 +1,26 @@
+﻿Method,Full URL,FastAPI path,Authentication,Parameters / request body,Purpose
+GET,http://localhost:8000/,/,None,None,Health check
+GET,http://localhost:8000/doctors,/doctors,None,"search, speciality_id, city, limit, offset",List/search doctors
+GET,http://localhost:8000/doctors/filters,/doctors/filters,None,None,Get doctor filter options
+POST,http://localhost:8000/doctors/auth/login,/doctors/auth/login,None,"JSON body: doctorId, password",Doctor login; returns bearer token
+GET,http://localhost:8000/doctors/me/appointments/today,/doctors/me/appointments/today,Bearer token (doctor),None,Get signed-in doctor's appointments for today
+POST,http://localhost:8000/doctors/doctor,/doctors/doctor,X-Doctor-Setup-Key header,JSON body: DoctorCreate,Create doctor record
+POST,http://localhost:8000/doctors/availability,/doctors/availability,Bearer token (doctor),JSON body: DoctorAvailabilityCreate,Add one weekly availability slot
+POST,http://localhost:8000/doctors/availability/weekly,/doctors/availability/weekly,Bearer token (doctor),JSON body: DoctorWeeklyAvailabilityCreate,Add multiple weekly availability slots
+POST,http://localhost:8000/doctors/{doctor_id}/password,/doctors/{doctor_id}/password,X-Doctor-Setup-Key header,Path: doctor_id; JSON body: password,Set initial doctor password
+GET,http://localhost:8000/doctors/{doctor_id}/availability,/doctors/{doctor_id}/availability,None,Path: doctor_id; query: date (YYYY-MM-DD),Get available appointment times
+POST,http://localhost:8000/appointments,/appointments,Bearer token (patient),JSON body: AppointmentCreate,Book an appointment
+GET,http://localhost:8000/appointments,/appointments,Bearer token (patient),None,List signed-in patient's appointments
+PATCH,http://localhost:8000/appointments/{appointment_id},/appointments/{appointment_id},Bearer token (patient),Path: appointment_id; JSON body: AppointmentReschedule,Reschedule an appointment
+DELETE,http://localhost:8000/appointments/{appointment_id},/appointments/{appointment_id},Bearer token (patient),Path: appointment_id,Cancel an appointment
+POST,http://localhost:8000/patients/register,/patients/register,None,JSON body: PatientRegistrationRequest,Register a patient
+GET,http://localhost:8000/patients/me,/patients/me,Bearer token (patient),None,Get signed-in patient's profile
+GET,http://localhost:8000/patients/me/address,/patients/me/address,Bearer token (patient),None,Get patient's address
+PATCH,http://localhost:8000/patients/me/address,/patients/me/address,Bearer token (patient),JSON body: AddressUpdateRequest,Update patient's address
+PATCH,http://localhost:8000/patients/me/updateAdress,/patients/me/updateAdress,Bearer token (patient),JSON body: AddressUpdateRequest,Compatibility alias for address update (legacy spelling)
+GET,http://localhost:8000/patients/me/contact,/patients/me/contact,Bearer token (patient),None,Get patient's contact information
+PATCH,http://localhost:8000/patients/me/contact,/patients/me/contact,Bearer token (patient),JSON body: ContactUpdateRequest,Update patient's contact information
+PATCH,http://localhost:8000/patients/me/updateContact,/patients/me/updateContact,Bearer token (patient),JSON body: ContactUpdateRequest,Compatibility alias for contact update
+POST,http://localhost:8000/auth/login,/auth/login,None,"JSON body: nationalID, password",Patient login; returns bearer token
+PATCH,http://localhost:8000/hospital/updateName,/hospital/updateName,None,JSON body: HospitalNameUpdate,Update a hospital name
+POST,http://localhost:8000/hospital/create,/hospital/create,None,JSON body: HospitalCreate,Create a hospital

@@ -11,6 +11,7 @@ from Doctor.schemas.DoctorSchemas import (
     SpecialityRead,
     DoctorCreate,
     DoctorAvailabilityCreate,
+    DoctorWeeklyAvailabilityCreate,
     DoctorAvailabilityRead,
     DoctorPasswordCreated,
 )
@@ -75,6 +76,27 @@ class DoctorDirectoryService:
         )
         created = self.doctors.create_availability(availability)
         return DoctorAvailabilityRead.model_validate(created)
+
+    def create_weekly_availability(
+        self, request: DoctorWeeklyAvailabilityCreate
+    ) -> list[DoctorAvailabilityRead]:
+        if self.doctors.get_doctor(request.doctorId) is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Doctor not found",
+            )
+
+        availabilities = [
+            DoctorAvailability(
+                doctorId=request.doctorId,
+                day=slot.day,
+                startTime=slot.startTime,
+                endTime=slot.endTime,
+            )
+            for slot in request.timings
+        ]
+        created = self.doctors.create_availabilities(availabilities)
+        return [DoctorAvailabilityRead.model_validate(item) for item in created]
 
     def create_doctor_password(
         self, doctor_id: int, password: str

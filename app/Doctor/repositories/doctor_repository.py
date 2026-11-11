@@ -53,6 +53,15 @@ class DoctorRepository:
         self.db.refresh(availability)
         return availability
 
+    def create_availabilities(
+        self, availabilities: list[DoctorAvailability]
+    ) -> list[DoctorAvailability]:
+        self.db.add_all(availabilities)
+        self.db.commit()
+        for availability in availabilities:
+            self.db.refresh(availability)
+        return availabilities
+
     def get_doctor_authentication(
         self, doctor_id: int
     ) -> DoctorAuthentication | None:

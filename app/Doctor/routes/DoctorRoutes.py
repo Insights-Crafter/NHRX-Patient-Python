@@ -13,6 +13,7 @@ from Doctor.schemas.DoctorSchemas import (
     DoctorCreate,
     DoctorAvailabilityCreate,
     DoctorAvailabilityRead,
+    DoctorWeeklyAvailabilityCreate,
     DoctorPasswordCreate,
     DoctorPasswordCreated,
     DoctorLoginRequest,
@@ -20,6 +21,7 @@ from Doctor.schemas.DoctorSchemas import (
 )
 from Doctor.services.doctor_authentication import DoctorAuthenticationService
 from Doctor.services.doctor_directory import DoctorDirectoryService
+from Doctor.repositories.doctor_repository import DoctorRepository
 from appointments.schemas.AppointmentSchema import DoctorAppointmentResponse
 from appointments.services.appointment_service import AppointmentService
 from utilityfunctions.reusable_functions import extract_doctor_id
@@ -87,9 +89,16 @@ def doctor_login(
         request.doctorId,
         request.password.get_secret_value(),
     )
+    doctor = DoctorRepository(db).get_doctor(doctor_id)
+    if doctor is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Doctor not found",
+        )
     return DoctorTokenResponse(
         access_token=create_access_token(str(doctor_id), role="doctor"),
         expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        name=doctor.name or "",
     )
 
 
@@ -129,6 +138,25 @@ def create_doctor_availability(
             detail="Doctors can only create their own availability",
         )
     return DoctorDirectoryService(db).create_availability(request)
+
+
+@router.post(
+    "/availability/weekly",
+    response_model=list[DoctorAvailabilityRead],
+    status_code=status.HTTP_201_CREATED,
+)
+def create_doctor_weekly_availability(
+    request: DoctorWeeklyAvailabilityCreate,
+    doctor_id: int = Depends(authenticated_doctor_id),
+    db: Session = Depends(get_db),
+) -> list[DoctorAvailabilityRead]:
+    """Add multiple recurring weekday slots for the authenticated doctor."""
+    if request.doctorId != doctor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Doctors can only create their own availability",
+        )
+    return DoctorDirectoryService(db).create_weekly_availability(request)
 
 
 @router.post(

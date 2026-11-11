@@ -29,27 +29,9 @@ from appointments.routes.AppointmentRoutes import router as appointment_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Create doctor tables after deployment, or all tables when requested."""
+    """Create tables only when explicitly enabled for local development."""
     if os.getenv("CREATE_DB_TABLES", "false").strip().lower() in {"1", "true", "yes"}:
         Base.metadata.create_all(bind=engine)
-    else:
-        # These tables were dropped to be rebuilt. Keep regular startup scoped
-        # to the doctor directory and its appointment table; patient schemas
-        # remain managed separately.
-        doctor_table_names = {
-            "Specialities",
-            "Hospitals",
-            "Doctor",
-            "DoctorAuthentication",
-            "DoctorTimings",
-            "Appointments",
-        }
-        doctor_tables = [
-            table
-            for table in Base.metadata.sorted_tables
-            if table.name in doctor_table_names
-        ]
-        Base.metadata.create_all(bind=engine, tables=doctor_tables)
     yield
 
 
@@ -65,6 +47,11 @@ cors_origins = [
     origin.strip()
     for origin in os.getenv("CORS_ORIGINS", "").split(",")
     if origin.strip()
+]
+# Render service references provide hostnames without a URL scheme.
+cors_origins = [
+    origin if "://" in origin else f"https://{origin}"
+    for origin in cors_origins
 ]
 app.add_middleware(
     CORSMiddleware,

@@ -14,9 +14,9 @@ if APP_DIR not in sys.path:
     sys.path.insert(0, APP_DIR)
 
 # Load the project's .env and build the URL here, independently of the app's
-# database module. Existing process environment variables take precedence.
+# database module. Project settings take precedence over stale process values.
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(PROJECT_ROOT / ".env")
+load_dotenv(PROJECT_ROOT / ".env", override=True)
 
 required_vars = ("DB_USER", "DB_PASSWORD", "DB_HOST", "DB_NAME")
 missing_vars = [name for name in required_vars if not os.getenv(name)]
@@ -30,6 +30,14 @@ database_url = URL.create(
     host=os.environ["DB_HOST"],
     port=int(os.getenv("DB_PORT", "5432")),
     database=os.environ["DB_NAME"],
+    query={
+        key: value
+        for key, value in (
+            ("sslmode", os.getenv("PGSSLMODE")),
+            ("channel_binding", os.getenv("PGCHANNELBINDING")),
+        )
+        if value
+    },
 )
 
 # Only the shared Base is imported for Alembic's model metadata.

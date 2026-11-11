@@ -61,10 +61,9 @@ class DoctorRead(BaseModel):
     hospitalID: int | None = Field(validation_alias="hospitalId")
 
 
-class DoctorAvailabilityCreate(BaseModel):
-    """One recurring weekly availability slot for a doctor."""
+class DoctorAvailabilitySlot(BaseModel):
+    """One recurring weekly time range."""
 
-    doctorId: int = Field(gt=0)
     day: Weekday
     startTime: time
     endTime: time
@@ -73,6 +72,32 @@ class DoctorAvailabilityCreate(BaseModel):
     def end_time_must_follow_start_time(self):
         if self.endTime <= self.startTime:
             raise ValueError("endTime must be later than startTime")
+        return self
+
+
+class DoctorAvailabilityCreate(DoctorAvailabilitySlot):
+    """One recurring weekly slot, retained for the existing endpoint."""
+
+    doctorId: int = Field(gt=0)
+
+
+class DoctorWeeklyAvailabilityCreate(BaseModel):
+    """Multiple recurring weekday slots submitted together for a doctor."""
+
+    doctorId: int = Field(gt=0)
+    timings: list[DoctorAvailabilitySlot] = Field(min_length=1, max_length=70)
+
+    @model_validator(mode="after")
+    def slots_must_not_overlap(self):
+        by_day: dict[str, list[DoctorAvailabilitySlot]] = {}
+        for slot in self.timings:
+            by_day.setdefault(slot.day, []).append(slot)
+
+        for day, slots in by_day.items():
+            ordered = sorted(slots, key=lambda slot: slot.startTime)
+            for previous, current in zip(ordered, ordered[1:]):
+                if current.startTime < previous.endTime:
+                    raise ValueError(f"Availability slots overlap on {day}")
         return self
 
 
@@ -106,6 +131,7 @@ class DoctorTokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
+    name: str
 
 
 class SpecialityCreate(BaseModel):

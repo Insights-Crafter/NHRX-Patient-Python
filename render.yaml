@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: nhrx-patient-api
+    runtime: python
+    plan: free
+    branch: deployment
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        sync: false
+      - key: PGSSLMODE
+        value: require
+      - key: PGCHANNELBINDING
+        value: require
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: AES_SIV_KEY
+        sync: false
+      - key: DOCTOR_PASSWORD_SETUP_KEY
+        sync: false
+      - key: CREATE_DB_TABLES
+        value: "false"
