@@ -24,7 +24,7 @@ The dashboard's `dashboard.js` contains its UI rendering and view-state helpers.
 
 `config.js` currently points to the Render API at `https://nhrx-patient-python.onrender.com`. For local development with VS Code Live Server and a directly running FastAPI server, change it to `http://localhost:8000`. For Docker Compose or deployment through Nginx, set `window.NHRX_API_BASE` to `/api`; Nginx forwards those requests to the backend container. The frontend Dockerfile copies top-level HTML, CSS, JavaScript, and SVG files into Nginx's document root, so `dashboard.js`, `booking.html`, and `past-appointments.html` are served automatically.
 
-For Cloudflare Pages, build with `python build_frontend.py` and publish `dist`. Set the Pages build variable `API_BASE_URL` to the Render API's HTTPS origin (no `/api` suffix). Set `CORS_ORIGINS` on Render to the exact Cloudflare Pages origin. The frontend calls API routes such as `/doctors` and `/appointments` directly. Use HTTPS before sending real patient data.
+For Cloudflare Pages, set the project root directory to `frontend`, build with `python build_frontend.py`, and publish `dist`. `API_BASE_URL` is optional: the build uses the Render API URL in `config.js` by default, or an `API_BASE_URL` build variable can override it. Set `CORS_ORIGINS` on Render to the exact Cloudflare Pages origin. The frontend calls API routes such as `/doctors` and `/appointments` directly. Use HTTPS before sending real patient data.
 
 ## Patient image uploads (Cloudflare R2)
 

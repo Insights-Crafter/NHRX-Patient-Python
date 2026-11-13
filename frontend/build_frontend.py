@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import re
 import shutil
 
 
@@ -9,7 +10,14 @@ source_dir = Path(__file__).resolve().parent
 output_dir = source_dir / "dist"
 api_base_url = os.environ.get("API_BASE_URL", "").strip()
 if not api_base_url:
-    raise RuntimeError("API_BASE_URL must be configured for the frontend build")
+    config_source = (source_dir / "config.js").read_text(encoding="utf-8")
+    match = re.search(
+        r"window\.NHRX_API_BASE\s*=\s*['\"]([^'\"]+)['\"]",
+        config_source,
+    )
+    if not match:
+        raise RuntimeError("Set API_BASE_URL or configure window.NHRX_API_BASE in config.js")
+    api_base_url = match.group(1).strip()
 if "://" not in api_base_url:
     api_base_url = f"https://{api_base_url}"
 
