@@ -34,14 +34,72 @@ function setupPatientAvatar(token) {
   input.className = "visually-hidden-file-input";
   document.body.append(input);
 
-  const chooseImage = (event) => {
+  const previewDialog = document.createElement("div");
+  previewDialog.className = "profile-image-backdrop";
+  previewDialog.hidden = true;
+  previewDialog.innerHTML = `
+    <section class="profile-image-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-image-title" tabindex="-1">
+      <button class="profile-image-close" type="button" aria-label="Close profile image preview">×</button>
+      <div class="profile-image-large" id="profile-image-large" aria-hidden="true"></div>
+      <h2 id="profile-image-title">Profile photo</h2>
+      <p>Use a clear photo so your profile is easy to recognize.</p>
+      <button class="profile-image-change" type="button">📷 &nbsp; Change photo</button>
+    </section>`;
+  document.body.append(previewDialog);
+  const dialog = previewDialog.querySelector(".profile-image-dialog");
+  const largePreview = previewDialog.querySelector("#profile-image-large");
+  const changeButton = previewDialog.querySelector(".profile-image-change");
+  const closeButton = previewDialog.querySelector(".profile-image-close");
+
+  const renderLargePreview = () => {
+    const currentImage = avatar.querySelector("img");
+    largePreview.replaceChildren();
+    if (currentImage) {
+      const image = document.createElement("img");
+      image.src = currentImage.src;
+      image.alt = "";
+      largePreview.append(image);
+    } else {
+      largePreview.textContent = avatar.dataset.fallback || avatar.textContent || "P";
+    }
+  };
+  const closePreview = () => {
+    previewDialog.hidden = true;
+    avatar.focus({ preventScroll: true });
+  };
+  const openPreview = () => {
+    renderLargePreview();
+    previewDialog.hidden = false;
+    changeButton.focus({ preventScroll: true });
+  };
+  closeButton.addEventListener("click", closePreview);
+  changeButton.addEventListener("click", () => input.click());
+  previewDialog.addEventListener("click", (event) => {
+    if (event.target === previewDialog) closePreview();
+  });
+  dialog.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closePreview();
+    if (event.key === "Tab") {
+      const first = closeButton;
+      const last = changeButton;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  });
+
+  const showPreview = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    input.click();
+    openPreview();
   };
-  avatar.addEventListener("click", chooseImage);
+  avatar.addEventListener("click", showPreview);
   avatar.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") chooseImage(event);
+    if (event.key === "Enter" || event.key === " ") showPreview(event);
   });
 
   let refreshed = false;
@@ -56,6 +114,7 @@ function setupPatientAvatar(token) {
       const latest = Array.isArray(images) ? images[0] : null;
       if (!latest?.imageUrl) {
         if (avatar.querySelector("img")) avatar.textContent = avatar.dataset.fallback || "P";
+        if (!previewDialog.hidden) renderLargePreview();
         return;
       }
       const image = document.createElement("img");
@@ -68,7 +127,8 @@ function setupPatientAvatar(token) {
       }, { once: true });
       avatar.replaceChildren(image);
       avatar.setAttribute("aria-label", "Change profile image");
-      avatar.title = "Change profile image";
+      avatar.title = "View profile image";
+      if (!previewDialog.hidden) renderLargePreview();
     } catch (_) {
       // Keep the patient's initials visible if image loading is unavailable.
     }
