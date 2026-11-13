@@ -2,64 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f8f6"><title>Patient dashboard | NHRX</title><link rel="stylesheet" href="styles.css?v=20261102">
+  <meta name="theme-color" content="#f5f8fc"><title>Patient dashboard | NHRX</title>
+  <link rel="stylesheet" href="styles.css?v=20261113-fonts">
 </head>
-<body class="dashboard-page">
-  <header class="topbar dashboard-topbar">
-    <a class="brand" href="home.html"><img src="nhrx-mark.svg" alt=""><span>NHRX</span><span class="brand-caption">Patient portal</span></a>
-    <nav class="main-nav" aria-label="Patient account"><a data-page="home.html" href="home.html">Overview</a><a data-page="appointments.html" href="appointments.html">Appointments</a><a data-page="contact.html" href="contact.html">Contact</a><a data-page="address.html" href="address.html">Address</a></nav>
-    <div class="user-menu"><div class="avatar" id="avatar">P</div><span id="header-name">Patient</span><button class="signout" id="signout" type="button">Sign out</button></div>
-  </header>
-  <main class="dashboard-main">
-    <section class="dashboard-welcome"><div><div class="eyebrow">PATIENT OVERVIEW</div><h1>Welcome, <span id="patient-first-name">there</span>.</h1><p>Your personal NHRX space for managing the details connected to your care.</p></div><div class="welcome-symbol"><img src="nhrx-mark.svg" alt=""></div></section>
-    <section class="section-block appointment-dashboard" aria-labelledby="appointment-widgets-title">
-      <div class="section-heading"><div><div class="eyebrow">YOUR CARE</div><h2 id="appointment-widgets-title">Appointments</h2></div><p>Book a visit or review your appointment history.</p></div>
-      <div class="appointment-widgets">
-        <a class="appointment-widget appointment-widget-primary" href="booking.html"><span class="widget-icon" aria-hidden="true">＋</span><span class="widget-label">START HERE</span><strong>Book an appointment</strong><small>Find a doctor and choose an available time.</small><span class="widget-link">Find a doctor <b aria-hidden="true">→</b></span></a>
-        <a class="appointment-widget" href="appointments.html"><span class="widget-icon" aria-hidden="true">◷</span><span class="widget-label">UPCOMING</span><strong>Pending appointments</strong><small id="pending-appointment-count">Loading your appointments…</small><span class="widget-link">View pending <b aria-hidden="true">→</b></span></a>
-        <a class="appointment-widget" href="past-appointments.html"><span class="widget-icon" aria-hidden="true">✓</span><span class="widget-label">HISTORY</span><strong>Past appointments</strong><small>Review completed or rejected appointments.</small><span class="widget-link">View history <b aria-hidden="true">→</b></span></a>
-      </div>
-    </section>
-    <section class="section-block"><div class="section-heading"><div><div class="eyebrow">ACCOUNT TOOLS</div><h2>Manage your details</h2></div><p>Choose a section to view or update your information.</p></div>
-      <div class="action-grid">
-        <a class="action-card" href="contact.html"><span class="action-icon teal-icon" aria-hidden="true">@</span><span class="action-copy"><strong>Contact details</strong><small>Update your phone number and email</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
-        <a class="action-card" href="address.html"><span class="action-icon gold-icon" aria-hidden="true">⌂</span><span class="action-copy"><strong>Home address</strong><small>Review or update your address</small></span><span class="action-arrow" aria-hidden="true">→</span></a>
-      </div>
-    </section>
-    <section class="section-block"><div class="section-heading"><div><div class="eyebrow">YOUR ACCOUNT</div><h2>Patient profile</h2></div></div>
-      <div class="summary-grid account-summary-grid">
-        <article class="summary-card profile-summary"><div class="card-icon teal-icon">✦</div><div class="summary-label">PATIENT PROFILE</div><h3 id="patient-full-name">Loading profile…</h3><p>Patient ID <strong id="patient-id">—</strong></p><span class="status-chip"><i></i> Account active</span></article>
-        <article class="summary-card"><div class="card-icon violet-icon">◷</div><div class="summary-label">UPCOMING VISITS</div><h3 id="profile-pending-count">—</h3><p>Appointments currently awaiting your visit.</p><div class="progress-track violet-track"><span></span></div></article>
-      </div>
-    </section>
-    <section class="care-note"><span class="care-note-mark"><img src="nhrx-mark.svg" alt=""></span><div><div class="eyebrow">NHRX PATIENT PORTAL</div><h2>Your care, connected.</h2><p>Keep your contact and address details current so your patient profile stays up to date.</p></div></section>
-    <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Signed in securely</footer>
-  </main>
-  <script src="config.js"></script><script src="shared.js"></script><script>
-    const token = requireToken();
-    setActiveNavigation();
-    document.querySelector("#signout").addEventListener("click", signOut);
-    if (token) apiRequest("/appointments", { headers: { Authorization: `Bearer ${token}` } }).then((appointments) => {
-      const pending = appointments.filter((item) => String(item.Status || "").toLowerCase() === "pending").length;
-      document.querySelector("#pending-appointment-count").textContent = `${pending} pending appointment${pending === 1 ? "" : "s"}`;
-      document.querySelector("#profile-pending-count").textContent = String(pending);
-    }).catch(() => {
-      document.querySelector("#pending-appointment-count").textContent = "Could not load appointments";
-      document.querySelector("#profile-pending-count").textContent = "—";
-    });
-    if (token) apiRequest("/patients/me", { headers: { Authorization: `Bearer ${token}` } }).then((patient) => {
-      const firstName = patient.firstName || "Patient";
-      const fullName = [patient.firstName, patient.lastName].filter(Boolean).join(" ") || firstName;
-      document.querySelector("#patient-first-name").textContent = firstName;
-      document.querySelector("#patient-full-name").textContent = fullName;
-      document.querySelector("#header-name").textContent = fullName;
-      document.querySelector("#avatar").textContent = firstName.charAt(0).toUpperCase();
-      document.querySelector("#patient-id").textContent = `#${patient.patientID}`;
-    }).catch(async (error) => {
-      localStorage.removeItem("nhrx_access_token");
-      await showFeedback(`${error.message} Please sign in again.`, "error", 1700);
-      window.location.replace("login.html");
-    });
-  </script>
+<body class="dashboard-page nhrx-dashboard">
+  <div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboard-sidebar" aria-label="Patient portal navigation">
+      <a class="dashboard-brand" href="home.html"><img src="nhrx-mark.svg?v=20261113-blue" alt=""><span><strong>NHRX</strong><small>Patient Portal</small></span></a>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a data-page="home.html" href="home.html"><span aria-hidden="true">🏠</span>Dashboard</a>
+        <a data-page="appointments.html" href="appointments.html"><span aria-hidden="true">📅</span>Appointments</a>
+        <a data-page="past-appointments.html" href="past-appointments.html"><span aria-hidden="true">🕘</span>Past appointments</a>
+        <a href="booking.html"><span aria-hidden="true">🩺</span>Book Appointment</a>
+        <a href="#medical-records" data-view="medical-records"><span aria-hidden="true">📋</span>Medical Records</a>
+        <a href="#prescriptions" data-view="prescriptions"><span aria-hidden="true">💊</span>Prescriptions</a>
+        <a href="#lab-results" data-view="lab-results"><span aria-hidden="true">🧪</span>Lab Results</a>
+        <a href="#health-summary" data-view="health-summary"><span aria-hidden="true">💙</span>Health Summary</a>
+        <a href="#patient-images"><span aria-hidden="true">🖼️</span>My Images</a>
+        <a data-page="contact.html" href="contact.html"><span aria-hidden="true">📞</span>Contact details</a>
+        <a data-page="address.html" href="address.html"><span aria-hidden="true">🏡</span>Address</a>
+      </nav>
+      <div class="sidebar-help"><span class="sidebar-help-icon" aria-hidden="true">ⓘ</span><strong>Need help?</strong><p>For account assistance, contact your care provider.</p></div>
+    </aside>
+
+    <div class="dashboard-content">
+      <header class="dashboard-header">
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="dashboard-sidebar" aria-label="Open navigation"><span></span><span></span><span></span></button>
+        <div class="header-spacer"></div>
+        <button class="notification-button" type="button" aria-label="Open notifications" data-view="notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></button>
+        <details class="profile-menu">
+          <summary><span class="profile-avatar profile-avatar-uploadable" id="header-avatar" role="button" tabindex="0" aria-label="Set profile image" title="Set profile image">P</span><span class="profile-menu-name" id="header-name">Patient</span><span class="profile-chevron" aria-hidden="true">⌄</span></summary>
+          <div class="profile-dropdown"><a href="contact.html">Contact details</a><a href="address.html">Home address</a><button id="signout" type="button">Sign out</button></div>
+        </details>
+      </header>
+
+      <main class="dashboard-main modern-dashboard-main">
+        <section class="dashboard-intro" aria-labelledby="welcome-title">
+          <div><div class="eyebrow">PATIENT DASHBOARD</div><h1 id="welcome-title">Welcome back, <span id="patient-first-name">there</span> <span class="welcome-emoji" aria-hidden="true">👋</span></h1><p>Here’s an overview of your care and appointments.</p><p class="profile-load-error" id="profile-load-error" role="status" hidden></p></div>
+          <div class="patient-id-chip"><span class="patient-id-dot" aria-hidden="true"></span><span>Patient ID</span><strong id="patient-id">—</strong></div>
+        </section>
+
+        <section class="quick-actions" aria-label="Quick actions">
+          <a class="quick-action" href="booking.html"><span class="quick-action-icon blue" aria-hidden="true">📅</span><span><strong>Book appointment</strong><small>Find a doctor and time</small></span><b aria-hidden="true">›</b></a>
+          <a class="quick-action" href="#prescriptions" data-view="prescriptions"><span class="quick-action-icon green" aria-hidden="true">💊</span><span><strong>Prescriptions</strong><small>Review your medications</small></span><b aria-hidden="true">›</b></a>
+          <a class="quick-action" href="#medical-records" data-view="medical-records"><span class="quick-action-icon violet" aria-hidden="true">📋</span><span><strong>Medical records</strong><small>Records and test results</small></span><b aria-hidden="true">›</b></a>
+          <a class="quick-action" href="#lab-results" data-view="lab-results"><span class="quick-action-icon amber" aria-hidden="true">🧪</span><span><strong>Lab results</strong><small>View your test results</small></span><b aria-hidden="true">›</b></a>
+        </section>
+
+        <div class="dashboard-columns">
+          <div class="dashboard-column-primary">
+            <section class="dashboard-panel upcoming-panel" aria-labelledby="upcoming-title">
+              <div class="panel-heading"><div><h2 id="upcoming-title">Upcoming appointments</h2><p>Your next scheduled visits</p></div><a href="appointments.html" class="panel-link">View all <span aria-hidden="true">→</span></a></div>
+              <div id="upcoming-state" class="dashboard-state" role="status">Loading your appointments…</div>
+              <div id="upcoming-list" class="upcoming-list" hidden></div>
+            </section>
+
+            <section class="dashboard-panel past-panel" aria-labelledby="past-title">
+              <div class="panel-heading"><div><h2 id="past-title">Past appointments</h2><p>Your recent appointment history</p></div><a href="past-appointments.html" class="panel-link">View all <span aria-hidden="true">→</span></a></div>
+              <div id="past-state" class="dashboard-state" role="status">Loading appointment history…</div>
+              <div id="past-list" class="past-list" hidden></div>
+            </section>
+          </div>
+
+          <div class="dashboard-column-secondary">
+            <section class="dashboard-panel records-panel" id="medical-records" aria-labelledby="records-title">
+              <div class="panel-heading"><div><h2 id="records-title">Medical records</h2><p>Your personal health information</p></div></div>
+              <div class="unavailable-note"><span class="note-icon" aria-hidden="true">i</span><div><strong>Your record sections are taking shape</strong><p>Medical records, prescriptions and lab reports haven’t been added to this portal yet.</p></div></div>
+              <div class="record-links" aria-label="Medical record categories">
+                <a href="#lab-results" data-view="lab-results"><span class="record-icon blue" aria-hidden="true">🧪</span><span><strong>Lab results</strong><small>View your test results</small></span><span class="record-chevron" aria-hidden="true">›</span></a>
+                <a href="#visit-summaries" data-view="visit-summaries"><span class="record-icon violet" aria-hidden="true">📝</span><span><strong>Visit summaries</strong><small>Review previous visits</small></span><span class="record-chevron" aria-hidden="true">›</span></a>
+                <a href="#prescriptions" data-view="prescriptions"><span class="record-icon amber" aria-hidden="true">💊</span><span><strong>Prescriptions</strong><small>View current prescriptions</small></span><span class="record-chevron" aria-hidden="true">›</span></a>
+              </div>
+            </section>
+
+            <section class="dashboard-panel health-panel" id="health-summary" aria-labelledby="health-title">
+              <div class="panel-heading"><div><h2 id="health-title">Health summary</h2><p>Details shared with your care team</p></div></div>
+              <div class="health-tiles">
+                <a href="#allergies" data-view="allergies"><span aria-hidden="true">⚠️</span><strong>Allergies</strong><small>View details</small></a>
+                <a href="#medications" data-view="medications"><span aria-hidden="true">💊</span><strong>Medications</strong><small>View details</small></a>
+                <a href="#conditions" data-view="conditions"><span aria-hidden="true">🩺</span><strong>Conditions</strong><small>View details</small></a>
+              </div>
+              <a href="#blood-group" data-view="blood-group" class="blood-group-row"><span aria-hidden="true">🩸</span><span>Blood group</span><strong>View details</strong><b aria-hidden="true">›</b></a>
+            </section>
+          </div>
+        </div>
+        <section class="dashboard-panel patient-images-panel" id="patient-images" aria-labelledby="patient-images-title">
+          <div class="panel-heading"><div><h2 id="patient-images-title">My images</h2><p>Click your profile circle above to set or change your image.</p></div></div>
+
+          <div id="patient-images-state" class="dashboard-state" role="status">Loading your images…</div>
+          <div id="patient-images-grid" class="patient-images-grid" hidden></div>
+        </section>
+        <section class="dashboard-panel feature-view" id="feature-view" hidden tabindex="-1" aria-live="polite" aria-labelledby="feature-title">
+          <a href="#dashboard" class="feature-back" id="feature-back">← Back to dashboard</a>
+          <div class="feature-art" aria-hidden="true"><div class="feature-orbit orbit-one"></div><div class="feature-orbit orbit-two"></div><div class="feature-document"><span></span><span></span><span></span><b>?</b></div><div class="feature-spark spark-one">✦</div><div class="feature-spark spark-two">✧</div></div>
+          <p class="eyebrow">NHRX PATIENT PORTAL</p><h2 id="feature-title">We couldn’t find this section</h2>
+          <p class="feature-description" id="feature-description">This part of your portal isn’t connected yet. Your dashboard and appointments are still available.</p>
+          <a class="feature-home-button" href="#dashboard">Return to dashboard</a>
+        </section>
+        <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Your health information is private</footer>
+      </main>
+    </div>
+  </div>
+  <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
+  <script src="config.js"></script><script src="shared.js"></script><script src="dashboard.js"></script>
 </body>
 </html>

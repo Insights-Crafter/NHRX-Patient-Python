@@ -21,6 +21,7 @@ from appointments import models as appointment_models
 from Patient.routes.PatientRegRoutes import router as patient_registration_router
 from Patient.routes.PatientProfileRoutes import router as patient_profile_router
 from Patient.routes.PatientUpdateRoutes import router as patient_update_router
+from Patient.routes.PatientImageRoutes import router as patient_image_router
 from Patient.routes.Authentication import authRouter
 from Doctor.routes.DoctorRoutes import router as doctor_router
 from Hospital.routes.HospitalRoute import routerHospital as hospital_router
@@ -65,6 +66,7 @@ app.add_middleware(
 app.include_router(patient_registration_router)
 app.include_router(patient_profile_router)
 app.include_router(patient_update_router)
+app.include_router(patient_image_router)
 app.include_router(authRouter)
 app.include_router(doctor_router)
 app.include_router(hospital_router)

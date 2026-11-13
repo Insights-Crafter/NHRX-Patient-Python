@@ -17,6 +17,103 @@ async function apiRequest(path, options = {}) {
   return data;
 }
 
+function setPatientAvatarFallback(name) {
+  const avatar = document.querySelector("#header-avatar");
+  if (!avatar) return;
+  avatar.dataset.fallback = String(name || "P").charAt(0).toUpperCase();
+  if (!avatar.querySelector("img")) avatar.textContent = avatar.dataset.fallback;
+}
+
+function setupPatientAvatar(token) {
+  const avatar = document.querySelector("#header-avatar");
+  if (!avatar || !token) return;
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/jpeg,image/png,image/webp";
+  input.setAttribute("aria-label", "Choose a profile image");
+  input.className = "visually-hidden-file-input";
+  document.body.append(input);
+
+  const chooseImage = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    input.click();
+  };
+  avatar.addEventListener("click", chooseImage);
+  avatar.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") chooseImage(event);
+  });
+
+  let refreshed = false;
+  const refreshAvatar = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/patients/me/images`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const images = await response.json();
+      const latest = Array.isArray(images) ? images[0] : null;
+      if (!latest?.imageUrl) {
+        if (avatar.querySelector("img")) avatar.textContent = avatar.dataset.fallback || "P";
+        return;
+      }
+      const image = document.createElement("img");
+      image.src = latest.imageUrl;
+      image.alt = "";
+      image.addEventListener("error", () => {
+        if (refreshed) return;
+        refreshed = true;
+        refreshAvatar();
+      }, { once: true });
+      avatar.replaceChildren(image);
+      avatar.setAttribute("aria-label", "Change profile image");
+      avatar.title = "Change profile image";
+    } catch (_) {
+      // Keep the patient's initials visible if image loading is unavailable.
+    }
+  };
+
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      await showFeedback("Choose a JPEG, PNG, or WebP image.", "error");
+      input.value = "";
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      await showFeedback("Images must be 8 MB or smaller.", "error");
+      input.value = "";
+      return;
+    }
+    avatar.setAttribute("aria-busy", "true");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch(`${API_BASE}/patients/me/images`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.detail || "Image upload failed.");
+      refreshed = false;
+      await refreshAvatar();
+      window.dispatchEvent(new Event("patient-images-updated"));
+      await showFeedback("Profile image updated.", "success");
+    } catch (error) {
+      await showFeedback(error.message || "Image upload failed.", "error");
+    } finally {
+      avatar.removeAttribute("aria-busy");
+      input.value = "";
+    }
+  });
+
+  window.addEventListener("patient-images-updated", refreshAvatar);
+  refreshAvatar();
+}
+
 function humanizeField(field) {
   if (!field) return "Field";
   return String(field).replaceAll("_", " ").replace(/([a-z])([A-Z])/g, "$1 $2");

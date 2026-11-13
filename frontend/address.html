@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f8f6"><title>Home address | NHRX</title><link rel="stylesheet" href="styles.css?v=20261101">
+  <meta name="theme-color" content="#f5f8fc"><title>Home address | NHRX</title><link rel="stylesheet" href="styles.css?v=20261113-fonts">
 </head>
 <body class="dashboard-page">
   <header class="topbar dashboard-topbar">
@@ -13,7 +13,7 @@
   <main class="settings-main">
     <a class="back-link" href="home.html">← <span>Back to overview</span></a>
     <section class="settings-heading"><div class="eyebrow">ACCOUNT DETAILS</div><h1>Home address</h1><p>Review the address saved to your patient profile or update it below.</p></section>
-    <section class="settings-card"><div class="settings-card-heading"><div class="settings-icon gold-icon" aria-hidden="true">⌂</div><div><h2>Address information</h2><p>Fill in the details you want to save. You can update individual fields.</p></div></div>
+    <section class="settings-card"><div class="settings-card-heading"><div class="settings-icon gold-icon" aria-hidden="true">🏡</div><div><h2>Address information</h2><p>Fill in the details you want to save. You can update individual fields.</p></div></div>
       <form id="address-form" novalidate><div class="field-grid">
         <div class="field"><label for="Area">Area</label><input id="Area" name="Area" maxlength="200" autocomplete="address-level3" placeholder="Area or neighborhood"></div>
         <div class="field"><label for="HouseNumber">House / unit number</label><input id="HouseNumber" name="HouseNumber" maxlength="100" autocomplete="address-line2" placeholder="House or apartment"></div>
@@ -25,7 +25,7 @@
     </section>
     <p class="settings-footnote">Your address is stored with your patient account.</p>
   </main>
-  <script src="config.js"></script><script src="shared.js"></script><script>
+  <script src="config.js"></script><script src="shared.js"></script><script src="portal-shell.js"></script><script>
     const token = requireToken();
     setActiveNavigation();
     const form = document.querySelector("#address-form");

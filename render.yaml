@@ -30,3 +30,11 @@ services:
         sync: false
       - key: CREATE_DB_TABLES
         value: "false"
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY
+        sync: false
+      - key: R2_SECRET_KEY
+        sync: false
+      - key: R2_PATIENT_BUCKET
+        sync: false

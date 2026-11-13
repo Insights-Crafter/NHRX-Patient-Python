@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f8f6"><title>Contact details | NHRX</title><link rel="stylesheet" href="styles.css?v=20261101">
+  <meta name="theme-color" content="#f5f8fc"><title>Contact details | NHRX</title><link rel="stylesheet" href="styles.css?v=20261113-fonts">
 </head>
 <body class="dashboard-page">
   <header class="topbar dashboard-topbar">
@@ -13,7 +13,7 @@
   <main class="settings-main">
     <a class="back-link" href="home.html">← <span>Back to overview</span></a>
     <section class="settings-heading"><div class="eyebrow">ACCOUNT DETAILS</div><h1>Contact details</h1><p>Keep your phone and email current so your patient profile has the right information.</p></section>
-    <section class="settings-card"><div class="settings-card-heading"><div class="settings-icon teal-icon" aria-hidden="true">@</div><div><h2>Ways to reach you</h2><p>Your saved contact details are shown below.</p></div></div>
+    <section class="settings-card"><div class="settings-card-heading"><div class="settings-icon teal-icon" aria-hidden="true">📞</div><div><h2>Ways to reach you</h2><p>Your saved contact details are shown below.</p></div></div>
       <form id="contact-form" novalidate><div class="field-grid">
         <div class="field"><label for="phone">Phone number</label><input id="phone" name="phone" type="tel" autocomplete="tel" minlength="11" maxlength="32" placeholder="e.g. 03001234567"><span class="field-hint">Enter at least 11 characters.</span></div>
         <div class="field"><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com"></div>
@@ -21,7 +21,7 @@
     </section>
     <p class="settings-footnote">At least one contact field must be provided when saving.</p>
   </main>
-  <script src="config.js"></script><script src="shared.js"></script><script>
+  <script src="config.js"></script><script src="shared.js"></script><script src="portal-shell.js"></script><script>
     const token = requireToken();
     setActiveNavigation();
     const form = document.querySelector("#contact-form");
