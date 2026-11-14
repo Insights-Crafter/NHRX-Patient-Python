@@ -55,9 +55,10 @@
       <nav class="directory-pagination" aria-label="Doctor results pages"><button id="previous-page" class="button secondary" type="button">← Previous</button><span id="pagination-label">Page 1</span><button id="next-page" class="button secondary" type="button">Next →</button></nav>
     </section>
 
-    <section id="selected-doctor" class="selected-doctor" hidden aria-live="polite">
+    <dialog id="booking-dialog" class="booking-dialog">
+    <section id="selected-doctor" class="selected-doctor" aria-live="polite">
       <div class="selected-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 17c0-6 4-10 10-10s10 4 10 10-4 10-10 10"/><path d="m21 8 5-1-1 5"/></svg></div>
-      <div class="selected-copy"><div class="eyebrow">BOOK AN APPOINTMENT</div><h2 id="selected-name"></h2><p>Choose a date and available time, then tell the doctor what you need help with.</p>
+      <div class="selected-copy"><div class="eyebrow">BOOK AN APPOINTMENT</div><h2 id="selected-name"></h2><p id="selected-details"></p><p>Choose a date and available time, then tell the doctor what you need help with.</p>
         <form id="booking-form" class="booking-form">
           <label>Date<input id="booking-date" name="date" type="date" required></label>
           <label>Available time<select id="booking-time" name="time" required disabled><option value="">Choose a date first</option></select></label>
@@ -65,8 +66,9 @@
           <button id="book-appointment" class="button primary" type="submit">Confirm appointment</button>
         </form>
       </div>
-      <button id="remove-selection" class="clear-filters" type="button">Remove selection</button>
+      <button id="remove-selection" class="clear-filters" type="button">Close booking</button>
     </section>
+    </dialog>
     </div>
     <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Find care near you</footer>
   </main>
@@ -79,6 +81,7 @@
     const emptyState = document.querySelector("#empty-state");
     const errorState = document.querySelector("#error-state");
     const selectedPanel = document.querySelector("#selected-doctor");
+    const bookingDialog = document.querySelector("#booking-dialog");
     const bookingForm = document.querySelector("#booking-form");
     const dateInput = document.querySelector("#booking-date");
     const timeSelect = document.querySelector("#booking-time");
@@ -96,6 +99,10 @@
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
+    }
+
+    function experienceText(doctor) {
+      return doctor.YearsofExperience == null ? "Experience not listed" : `${doctor.YearsofExperience} years of experience`;
     }
 
     async function loadAvailableTimes() {
@@ -171,7 +178,7 @@
       avatar.textContent = initials || "D";
       const credential = document.createElement("span");
       credential.className = "doctor-experience";
-      credential.textContent = doctor.YearsofExperience == null ? "Doctor" : `${doctor.YearsofExperience} years’ experience`;
+      credential.textContent = doctor.YearsofExperience == null ? "Doctor" : `${doctor.YearsofExperience} years of experience`;
       head.append(avatar, credential);
 
       const name = document.createElement("h3");
@@ -179,36 +186,29 @@
       const speciality = document.createElement("p");
       speciality.className = "doctor-speciality";
       speciality.textContent = doctor.specialityName || "Speciality not listed";
-      const schedule = document.createElement("p");
-      schedule.className = "doctor-timings";
-      const timings = Array.isArray(doctor.timings) ? doctor.timings : [];
-      schedule.textContent = timings.length
-        ? `Weekly hours: ${timings.map((item) => `${item.day} ${String(item.startTime).slice(0, 5)}–${String(item.endTime).slice(0, 5)}`).join(" · ")}`
-        : "Weekly hours not listed";
       const location = document.createElement("p");
       location.className = "doctor-location";
-      location.innerHTML = '<span aria-hidden="true">⌖</span>';
-      location.append(document.createTextNode(` ${doctor.hospitalName || "Hospital not listed"}${doctor.City ? ` · ${doctor.City}` : ""}`));
+      location.textContent = (doctor.hospitalName || "Hospital not listed").toLocaleUpperCase();
 
       const footer = document.createElement("div");
       footer.className = "doctor-card-footer";
-      const limit = document.createElement("span");
-      limit.textContent = doctor.DailyPatientLimit == null ? "Appointments available" : `Daily capacity: ${doctor.DailyPatientLimit}`;
       const choose = document.createElement("button");
       choose.className = "button secondary doctor-select-button";
       choose.type = "button";
       choose.textContent = Number(state.doctor_id) === doctor.doctorID ? "Selected" : "Choose doctor";
       choose.setAttribute("aria-pressed", Number(state.doctor_id) === doctor.doctorID ? "true" : "false");
       choose.addEventListener("click", () => selectDoctor(doctor));
-      footer.append(limit, choose);
-      card.append(head, name, speciality, schedule, location, footer);
+      footer.append(choose);
+      card.append(head, name, speciality, location, footer);
       return card;
     }
 
     function selectDoctor(doctor) {
       state.doctor_id = doctor.doctorID;
       document.querySelector("#selected-name").textContent = doctor.Name || "Selected doctor";
+      document.querySelector("#selected-details").textContent = `${experienceText(doctor)} · ${(doctor.hospitalName || "Hospital not listed").toLocaleUpperCase()}`;
       selectedPanel.hidden = false;
+      bookingDialog.showModal();
       dateInput.min = localDateString();
       if (!dateInput.value || dateInput.value < dateInput.min) dateInput.value = dateInput.min;
       loadAvailableTimes();
@@ -255,7 +255,9 @@
         const chosen = records.find((doctor) => doctor.doctorID === state.doctor_id);
         if (chosen) {
           document.querySelector("#selected-name").textContent = chosen.Name || "Selected doctor";
+          document.querySelector("#selected-details").textContent = `${experienceText(chosen)} · ${(chosen.hospitalName || "Hospital not listed").toLocaleUpperCase()}`;
           selectedPanel.hidden = false;
+          if (!bookingDialog.open) bookingDialog.showModal();
           dateInput.min = localDateString();
           if (!dateInput.value || dateInput.value < dateInput.min) dateInput.value = dateInput.min;
           await loadAvailableTimes();
@@ -273,6 +275,7 @@
       state = { search: "", speciality_id: "", city: "", limit: pageSize, offset: 0, doctor_id: null };
       applyStateToForm();
       selectedPanel.hidden = true;
+      bookingDialog.close();
       updateUrl();
       loadDoctors();
     }
@@ -285,6 +288,7 @@
       state.offset = 0;
       state.doctor_id = null;
       selectedPanel.hidden = true;
+      bookingDialog.close();
       loadDoctors({ updateHistory: true });
     });
     document.querySelector("#clear-filters").addEventListener("click", clearFilters);
@@ -321,6 +325,7 @@
     document.querySelector("#remove-selection").addEventListener("click", () => {
       state.doctor_id = null;
       selectedPanel.hidden = true;
+      bookingDialog.close();
       updateUrl();
       loadDoctors({ updateHistory: false });
     });
@@ -337,6 +342,8 @@
       state = readQuery();
       applyStateToForm();
       selectedPanel.hidden = !state.doctor_id;
+      if (state.doctor_id && !bookingDialog.open) bookingDialog.showModal();
+      if (!state.doctor_id && bookingDialog.open) bookingDialog.close();
       if (state.doctor_id) document.querySelector("#selected-name").textContent = "Selected doctor";
       await loadDoctors();
     });

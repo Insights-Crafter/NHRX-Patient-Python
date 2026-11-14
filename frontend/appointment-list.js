@@ -22,6 +22,12 @@
     return `${year}-${month}-${day}`;
   }
 
+  function isInPast(item) {
+    const value = `${item.AppointmentDate || ""}T${String(item.AppointmentTime || "00:00").slice(0, 8)}`;
+    const appointmentAt = new Date(value);
+    return !Number.isNaN(appointmentAt.getTime()) && appointmentAt < new Date();
+  }
+
   function statusBadge(value) {
     const badge = document.createElement("span");
     const normalized = String(value || "Unknown");
@@ -38,11 +44,14 @@
       const allAppointments = await request("/appointments");
       const appointments = allAppointments.filter((item) => {
         const value = String(item.Status || "").toLowerCase();
-        return isPendingView ? value === "pending" : value === "completed" || value === "rejected";
-      });
+        const terminal = ["completed", "rejected", "cancelled", "canceled"].includes(value);
+        return isPendingView
+          ? value === "pending" && !isInPast(item)
+          : terminal || isInPast(item);
+      }).sort((a, b) => `${a.AppointmentDate}T${a.AppointmentTime}`.localeCompare(`${b.AppointmentDate}T${b.AppointmentTime}`) * (isPendingView ? 1 : -1));
       statusText.textContent = appointments.length
         ? `${appointments.length} ${isPendingView ? "pending" : "past"} appointment${appointments.length === 1 ? "" : "s"}`
-        : isPendingView ? "You have no pending appointments." : "You have no completed or rejected appointments yet.";
+        : isPendingView ? "You have no upcoming appointments." : "You have no past appointments yet.";
 
       for (const item of appointments) {
         const card = document.createElement("article");
@@ -60,7 +69,7 @@
         meta.textContent = `${apptDate.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })} at ${(item.AppointmentTime || "").slice(0, 5)}`;
         const venue = document.createElement("p");
         venue.className = "appointment-venue";
-        venue.textContent = [item.specialityName, item.hospitalName, item.City].filter(Boolean).join(" · ") || "Appointment details";
+        venue.textContent = [item.specialityName, item.hospitalName?.toLocaleUpperCase(), item.City].filter(Boolean).join(" · ") || "Appointment details";
         details.append(titleRow, meta, venue);
         if (item.Complaint) {
           const complaint = document.createElement("p");

@@ -138,10 +138,9 @@
     const state = document.querySelector("#upcoming-state");
     const list = document.querySelector("#upcoming-list");
     list.replaceChildren();
-    const today = new Date(); today.setHours(0, 0, 0, 0);
     const upcoming = items.filter((item) => {
-      const date = toDate(item.AppointmentDate);
-      return String(item.Status || "").toLowerCase() === "pending" && date && date >= today;
+      const when = new Date(appointmentDateTime(item));
+      return String(item.Status || "").toLowerCase() === "pending" && !Number.isNaN(when.getTime()) && when >= new Date();
     }).sort((a, b) => appointmentDateTime(a).localeCompare(appointmentDateTime(b))).slice(0, 3);
     if (!upcoming.length) { setState("upcoming-state", "No upcoming appointments yet. When you book a visit, it will appear here."); return; }
     state.hidden = true;

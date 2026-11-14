@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -17,6 +18,7 @@ from utilityfunctions.encryption import EncryptionService
 
 SLOT_LENGTH = timedelta(minutes=30)
 COMPLAINT_CIPHERTEXT_PREFIX = "enc:v1:"
+PATIENT_TIMEZONE = ZoneInfo("Asia/Karachi")
 
 
 class AppointmentService:
@@ -57,8 +59,14 @@ class AppointmentService:
 
     @staticmethod
     def _check_date(appointment_date: date) -> None:
-        if appointment_date < date.today():
+        if appointment_date < datetime.now(PATIENT_TIMEZONE).date():
             raise HTTPException(status_code=422, detail="Appointment date must be today or later")
+
+    @staticmethod
+    def _check_not_in_past(appointment_date: date, appointment_time: time) -> None:
+        appointment_at = datetime.combine(appointment_date, appointment_time, tzinfo=PATIENT_TIMEZONE)
+        if appointment_at <= datetime.now(PATIENT_TIMEZONE):
+            raise HTTPException(status_code=409, detail="The selected appointment time has already passed")
 
     @staticmethod
     def _schedule_time(value: str | time) -> time:
@@ -104,7 +112,10 @@ class AppointmentService:
             current = datetime.combine(appointment_date, time(rounded_minute // 60, rounded_minute % 60))
             while current + SLOT_LENGTH <= end:
                 slot = current.time()
-                if slot not in booked:
+                slot_at = datetime.combine(
+                    appointment_date, slot, tzinfo=PATIENT_TIMEZONE
+                )
+                if slot not in booked and slot_at > datetime.now(PATIENT_TIMEZONE):
                     available.add(slot)
                 current += SLOT_LENGTH
         return sorted(available)
@@ -120,6 +131,7 @@ class AppointmentService:
         )
         if not self._slot_is_scheduled(appointment_time, schedule):
             raise HTTPException(status_code=409, detail="The selected time is outside the doctor's available schedule")
+        self._check_not_in_past(appointment_date, appointment_time)
         if appointment_time in self.appointments.get_booked_times(doctor_id, appointment_date):
             raise HTTPException(status_code=409, detail="This appointment slot has already been booked")
 

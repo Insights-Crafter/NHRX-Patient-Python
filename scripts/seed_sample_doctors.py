@@ -3,7 +3,6 @@
 Run from the project root with: venv/Scripts/python.exe scripts/seed_sample_doctors.py
 """
 
-from datetime import time
 from pathlib import Path
 import sys
 
@@ -90,16 +89,14 @@ def seed_sample_doctors() -> tuple[int, int]:
                 [
                     DoctorAvailability(
                         doctorId=doctor.id,
-                        day="Monday",
+                        day=day,
                         startTime="09:00",
-                        endTime="13:00",
-                    ),
-                    DoctorAvailability(
-                        doctorId=doctor.id,
-                        day="Wednesday",
-                        startTime="14:00",
-                        endTime="18:00",
-                    ),
+                        endTime="17:00",
+                    )
+                    for day in (
+                        "Monday", "Tuesday", "Wednesday", "Thursday",
+                        "Friday", "Saturday", "Sunday",
+                    )
                 ]
             )
             inserted += 1
@@ -117,4 +114,4 @@ if __name__ == "__main__":
     inserted_count, skipped_count = seed_sample_doctors()
     print(f"Inserted sample doctors: {inserted_count}")
     print(f"Skipped existing sample doctors: {skipped_count}")
-    print("Each new doctor has Monday and Wednesday availability.")
+    print("Each new doctor has daily 09:00–17:00 availability, including weekends.")
