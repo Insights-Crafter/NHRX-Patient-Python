@@ -66,7 +66,7 @@
           <div class="dashboard-column-secondary">
             <section class="dashboard-panel records-panel" id="medical-records" aria-labelledby="records-title">
               <div class="panel-heading"><div><h2 id="records-title">Medical records</h2><p>Your personal health information</p></div></div>
-              <div class="unavailable-note"><span class="note-icon" aria-hidden="true">i</span><div><strong>Your record sections are taking shape</strong><p>Medical records, prescriptions and lab reports haven’t been added to this portal yet.</p></div></div>
+              <div class="unavailable-note"><span class="note-icon" aria-hidden="true">i</span><div><strong>Reports and prescriptions from your doctor</strong><p>Files your doctor uploads after an appointment will appear here for you to view.</p></div></div>
               <div class="record-links" aria-label="Medical record categories">
                 <a href="#lab-results" data-view="lab-results"><span class="record-icon blue" aria-hidden="true">🧪</span><span><strong>Lab results</strong><small>View your test results</small></span><span class="record-chevron" aria-hidden="true">›</span></a>
                 <a href="#visit-summaries" data-view="visit-summaries"><span class="record-icon violet" aria-hidden="true">📝</span><span><strong>Visit summaries</strong><small>Review previous visits</small></span><span class="record-chevron" aria-hidden="true">›</span></a>
@@ -90,6 +90,7 @@
           <div class="feature-art" aria-hidden="true"><div class="feature-orbit orbit-one"></div><div class="feature-orbit orbit-two"></div><div class="feature-document"><span></span><span></span><span></span><b>?</b></div><div class="feature-spark spark-one">✦</div><div class="feature-spark spark-two">✧</div></div>
           <p class="eyebrow">NHRX PATIENT PORTAL</p><h2 id="feature-title">We couldn’t find this section</h2>
           <p class="feature-description" id="feature-description">This part of your portal isn’t connected yet. Your dashboard and appointments are still available.</p>
+          <div id="patient-documents" class="patient-documents" hidden aria-live="polite"></div>
           <a class="feature-home-button" href="#dashboard">Return to dashboard</a>
         </section>
         <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Your health information is private</footer>
@@ -97,6 +98,6 @@
     </div>
   </div>
   <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
-  <script src="config.js"></script><script src="shared.js"></script><script src="dashboard.js"></script>
+  <script src="config.js"></script><script src="shared.js"></script><script src="dashboard.js"></script><script src="patient-documents.js"></script>
 </body>
 </html>

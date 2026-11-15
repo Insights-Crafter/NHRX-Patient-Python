@@ -7,6 +7,7 @@ from . import Medical_Record_Diagnosis
 from . import MedicationsModel
 from . import PatientAddress
 from . import PatientImage
+from . import PatientDocument
 from . import PatientModel
 from . import RecordMedicines
 from . import RecordTests

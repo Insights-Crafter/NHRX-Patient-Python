@@ -58,6 +58,17 @@ def upload_patient_image(file, object_key: str, content_type: str) -> str:
     return object_key
 
 
+def upload_patient_document(file, object_key: str, content_type: str) -> str:
+    client, bucket = _storage()
+    client.upload_fileobj(
+        file,
+        bucket,
+        object_key,
+        ExtraArgs={"ContentType": content_type},
+    )
+    return object_key
+
+
 def delete_patient_image(object_key: str) -> None:
     client, bucket = _storage()
     client.delete_object(Bucket=bucket, Key=object_key)

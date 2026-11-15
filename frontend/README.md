@@ -18,7 +18,7 @@ Successful registration and sign-in show a timed confirmation widget before navi
 
 The UI uses native browser constraints plus shared JavaScript validation before API requests. The API remains the source of truth and validates every submitted request independently.
 
-The dashboard's `dashboard.js` contains its UI rendering and view-state helpers. `portal-shell.js` supplies the shared sidebar, responsive mobile navigation, profile menu, and sign-out control on authenticated pages. The current backend exposes patient profile and appointment data, but not patient-facing records, prescriptions, lab results, allergies, medications, diagnoses, or blood group endpoints. The dashboard therefore provides clearly labeled section cards and a designed not-found view for those links; it does not invent or display clinical data.
+The dashboard's `dashboard.js` contains its UI rendering and view-state helpers. `portal-shell.js` supplies the shared sidebar, responsive mobile navigation, profile menu, and sign-out control on authenticated pages. Reports and prescriptions uploaded by a doctor appear in the patient's Medical Records, Reports, and Prescriptions views.
 
 ## Local API connection
 
@@ -32,4 +32,8 @@ Click the circular profile image in the header to choose or change a JPEG, PNG, 
 
 For local development, set `R2_ENDPOINT`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, and `R2_PATIENT_BUCKET` in `.env`. In Render, set the same variables in the API service environment using an R2 API token restricted to this bucket. Keep the bucket private and never add R2 credentials to frontend configuration. The backend needs an R2 S3-compatible endpoint of the form `https://<account-id>.r2.cloudflarestorage.com` and a token that can read, write, and delete objects in the selected bucket.
 
-After deploying the code, apply the database migration once against the production database: `alembic upgrade head`. `python-multipart` is listed in `requirements.txt` for FastAPI multipart form uploads. Then deploy the frontend so the **My images** upload and gallery can use the new endpoints.
+## Doctor-uploaded reports and prescriptions (Cloudflare R2)
+
+An authenticated doctor can upload a PDF, JPEG, PNG, or WebP file (up to 20 MB) for an appointment they own with `POST /doctors/me/appointments/{appointment_id}/documents`. Send multipart form fields `documentType` (`report` or `prescription`), optional `description`, and `file`. The API stores the object privately in the configured patient bucket and saves only metadata and its object key in `PatientDocuments`. `GET /patients/me/documents` returns only the signed-in patient's documents with five-minute signed URLs; use `?type=report` or `?type=prescription` to filter. The portal requests fresh URLs as the patient opens these sections.
+
+After deploying the code, apply the database migration once against the production database: `alembic upgrade head`. `python-multipart` is listed in `requirements.txt` for FastAPI multipart form uploads. Then deploy the frontend so the **My images** gallery and patient document views can use the new endpoints.
