@@ -70,8 +70,10 @@
         list.append(card);
       }
       panel.replaceChildren(list);
-    } catch {
+    } catch (error) {
+      console.error("Patient documents request failed:", error);
       const state = element("p", "dashboard-state error", "We couldn’t load your documents. Please try again.");
+      state.textContent = error.message || state.textContent;
       const retry = element("button", "retry-button", "Try again");
       retry.type = "button";
       retry.addEventListener("click", () => load(view));
@@ -80,9 +82,7 @@
     }
   }
 
-  document.querySelectorAll("[data-view]").forEach((link) => {
-    link.addEventListener("click", () => setTimeout(() => load(link.dataset.view), 0));
-  });
+  window.addEventListener("patient:viewchange", (event) => load(event.detail?.view));
   const current = window.location.hash.slice(1);
   if (messages[current]) load(current);
 })();

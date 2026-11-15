@@ -45,6 +45,7 @@
     featureView.hidden = false;
     document.querySelector(".modern-dashboard-main").classList.add("feature-mode");
     history.replaceState(null, "", `#${view}`);
+    window.dispatchEvent(new CustomEvent("patient:viewchange", { detail: { view } }));
     featureView.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "smooth" });
     setMenuOpen(false);
