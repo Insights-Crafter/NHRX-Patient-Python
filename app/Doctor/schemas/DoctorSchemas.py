@@ -70,8 +70,8 @@ class DoctorAvailabilitySlot(BaseModel):
 
     @model_validator(mode="after")
     def end_time_must_follow_start_time(self):
-        if self.endTime <= self.startTime:
-            raise ValueError("endTime must be later than startTime")
+        if self.endTime == self.startTime:
+            raise ValueError("endTime must differ from startTime")
         return self
 
 

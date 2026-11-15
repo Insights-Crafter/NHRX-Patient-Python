@@ -91,7 +91,7 @@ def seed_sample_doctors() -> tuple[int, int]:
                         doctorId=doctor.id,
                         day=day,
                         startTime="09:00",
-                        endTime="17:00",
+                        endTime="01:00",
                     )
                     for day in (
                         "Monday", "Tuesday", "Wednesday", "Thursday",
@@ -114,4 +114,4 @@ if __name__ == "__main__":
     inserted_count, skipped_count = seed_sample_doctors()
     print(f"Inserted sample doctors: {inserted_count}")
     print(f"Skipped existing sample doctors: {skipped_count}")
-    print("Each new doctor has daily 09:00–17:00 availability, including weekends.")
+    print("Each new doctor has daily availability from 09:00 through 01:00.")

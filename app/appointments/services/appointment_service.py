@@ -87,11 +87,19 @@ class AppointmentService:
             return False
         slot_start = datetime.combine(date.min, start)
         slot_end = slot_start + SLOT_LENGTH
-        return any(
-            slot_start >= datetime.combine(date.min, AppointmentService._schedule_time(row.startTime))
-            and slot_end <= datetime.combine(date.min, AppointmentService._schedule_time(row.endTime))
-            for row in schedule
-        )
+        for row in schedule:
+            scheduled_start = AppointmentService._schedule_time(row.startTime)
+            scheduled_end = AppointmentService._schedule_time(row.endTime)
+            start_at = datetime.combine(date.min, scheduled_start)
+            end_at = datetime.combine(date.min, scheduled_end)
+            if scheduled_end > scheduled_start:
+                if slot_start >= start_at and slot_end <= end_at:
+                    return True
+            elif slot_start >= start_at and slot_end <= datetime.combine(date.min + timedelta(days=1), time.min):
+                return True
+            elif slot_start >= datetime.combine(date.min, time.min) and slot_end <= end_at:
+                return True
+        return False
 
     def get_available_slots(self, doctor_id: int, appointment_date: date) -> list[time]:
         self._check_date(appointment_date)
@@ -103,21 +111,27 @@ class AppointmentService:
         booked = self.appointments.get_booked_times(doctor_id, appointment_date)
         available: set[time] = set()
         for row in schedule:
-            current = datetime.combine(appointment_date, self._schedule_time(row.startTime))
-            end = datetime.combine(appointment_date, self._schedule_time(row.endTime))
-            minute_of_day = current.hour * 60 + current.minute
-            rounded_minute = ((minute_of_day + 29) // 30) * 30
-            if rounded_minute >= 24 * 60:
-                continue
-            current = datetime.combine(appointment_date, time(rounded_minute // 60, rounded_minute % 60))
-            while current + SLOT_LENGTH <= end:
-                slot = current.time()
-                slot_at = datetime.combine(
-                    appointment_date, slot, tzinfo=PATIENT_TIMEZONE
-                )
-                if slot not in booked and slot_at > datetime.now(PATIENT_TIMEZONE):
-                    available.add(slot)
-                current += SLOT_LENGTH
+            start_time = self._schedule_time(row.startTime)
+            end_time = self._schedule_time(row.endTime)
+            intervals = [(start_time, end_time, False)] if end_time > start_time else [
+                (start_time, time.min, True), (time.min, end_time, False)
+            ]
+            for interval_start, interval_end, ends_at_midnight in intervals:
+                current = datetime.combine(appointment_date, interval_start)
+                end = datetime.combine(appointment_date, interval_end)
+                if ends_at_midnight:
+                    end += timedelta(days=1)
+                minute_of_day = current.hour * 60 + current.minute
+                rounded_minute = ((minute_of_day + 29) // 30) * 30
+                if rounded_minute >= 24 * 60:
+                    continue
+                current = datetime.combine(appointment_date, time(rounded_minute // 60, rounded_minute % 60))
+                while current + SLOT_LENGTH <= end:
+                    slot = current.time()
+                    slot_at = datetime.combine(appointment_date, slot, tzinfo=PATIENT_TIMEZONE)
+                    if slot not in booked and slot_at > datetime.now(PATIENT_TIMEZONE):
+                        available.add(slot)
+                    current += SLOT_LENGTH
         return sorted(available)
 
     def _reserve_slot(self, doctor_id: int, appointment_date: date, appointment_time: time) -> None:

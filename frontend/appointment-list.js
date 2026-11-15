@@ -5,8 +5,11 @@
   const statusText = document.querySelector("#appointments-status");
   const list = document.querySelector("#appointments-list");
   const refreshButton = document.querySelector("#refresh-appointments");
-  const isPendingView = window.location.pathname.endsWith("appointments.html")
-    && !window.location.pathname.endsWith("past-appointments.html");
+  const appointmentView = document.body.dataset.appointmentView;
+  const isUpcomingView = appointmentView
+    ? appointmentView === "upcoming"
+    : window.location.pathname.endsWith("appointments.html")
+      && !window.location.pathname.endsWith("past-appointments.html");
 
   function request(path, options = {}) {
     return apiRequest(path, {
@@ -45,13 +48,13 @@
       const appointments = allAppointments.filter((item) => {
         const value = String(item.Status || "").toLowerCase();
         const terminal = ["completed", "rejected", "cancelled", "canceled"].includes(value);
-        return isPendingView
+        return isUpcomingView
           ? value === "pending" && !isInPast(item)
           : terminal || isInPast(item);
-      }).sort((a, b) => `${a.AppointmentDate}T${a.AppointmentTime}`.localeCompare(`${b.AppointmentDate}T${b.AppointmentTime}`) * (isPendingView ? 1 : -1));
+      }).sort((a, b) => `${a.AppointmentDate}T${a.AppointmentTime}`.localeCompare(`${b.AppointmentDate}T${b.AppointmentTime}`) * (isUpcomingView ? 1 : -1));
       statusText.textContent = appointments.length
-        ? `${appointments.length} ${isPendingView ? "pending" : "past"} appointment${appointments.length === 1 ? "" : "s"}`
-        : isPendingView ? "You have no upcoming appointments." : "You have no past appointments yet.";
+        ? `${appointments.length} ${isUpcomingView ? "upcoming" : "past"} appointment${appointments.length === 1 ? "" : "s"}`
+        : isUpcomingView ? "You have no upcoming appointments." : "You have no past appointments yet.";
 
       for (const item of appointments) {
         const card = document.createElement("article");
@@ -79,7 +82,7 @@
         }
         card.append(details);
 
-        if (isPendingView) {
+        if (isUpcomingView) {
           const actions = document.createElement("div");
           actions.className = "pending-appointment-actions";
           const dateInput = document.createElement("input");

@@ -70,6 +70,17 @@
     </section>
     </dialog>
     </div>
+    <dialog id="booking-success-dialog" class="booking-success-dialog" aria-labelledby="booking-success-title">
+      <article class="booking-success-card">
+        <div class="booking-success-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><circle class="success-check-circle" cx="32" cy="32" r="27"/><path class="success-check-path" d="m19 33 9 9 18-20"/></svg>
+        </div>
+        <div class="eyebrow">BOOKING CONFIRMED</div>
+        <h2 id="booking-success-title">Appointment booked successfully</h2>
+        <p id="booking-success-details"></p>
+        <button id="booking-success-close" class="button primary" type="button">Done</button>
+      </article>
+    </dialog>
     <footer class="dashboard-footer">NHRX Patient Portal <span>·</span> Find care near you</footer>
   </main>
   <script src="config.js"></script><script src="shared.js"></script><script src="portal-shell.js"></script><script>
@@ -82,6 +93,7 @@
     const errorState = document.querySelector("#error-state");
     const selectedPanel = document.querySelector("#selected-doctor");
     const bookingDialog = document.querySelector("#booking-dialog");
+    const bookingSuccessDialog = document.querySelector("#booking-success-dialog");
     const bookingForm = document.querySelector("#booking-form");
     const dateInput = document.querySelector("#booking-date");
     const timeSelect = document.querySelector("#booking-time");
@@ -313,8 +325,20 @@
           }),
         });
         document.querySelector("#booking-complaint").value = "";
-        await loadAvailableTimes();
-        await showFeedback("Appointment booked successfully. Its status is Pending.", "success");
+        const date = new Date(`${dateInput.value}T00:00:00`);
+        const displayDate = Number.isNaN(date.getTime())
+          ? dateInput.value
+          : date.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+        const [hour, minute] = timeSelect.value.split(":").map(Number);
+        const displayTime = Number.isFinite(hour) && Number.isFinite(minute)
+          ? new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(2000, 0, 1, hour, minute))
+          : timeSelect.value;
+        document.querySelector("#booking-success-details").textContent = `${document.querySelector("#selected-name").textContent} · ${displayDate} at ${displayTime}`;
+        bookingDialog.close();
+        state.doctor_id = null;
+        updateUrl({ push: false });
+        await loadDoctors();
+        bookingSuccessDialog.showModal();
       } catch (error) {
         await showFeedback(error.message, "error");
         await loadAvailableTimes();
@@ -329,6 +353,7 @@
       updateUrl();
       loadDoctors({ updateHistory: false });
     });
+    document.querySelector("#booking-success-close").addEventListener("click", () => bookingSuccessDialog.close());
     document.querySelector("#previous-page").addEventListener("click", () => {
       state.offset = Math.max(0, state.offset - pageSize);
       loadDoctors({ updateHistory: true });

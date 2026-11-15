@@ -5,7 +5,7 @@
   <meta name="theme-color" content="#f5f8fc"><title>Patient dashboard | NHRX</title>
   <link rel="stylesheet" href="styles.css?v=20261113-fonts">
 </head>
-<body class="dashboard-page nhrx-dashboard">
+<body class="dashboard-page nhrx-dashboard patient-home-page">
   <div class="dashboard-shell">
     <aside class="dashboard-sidebar" id="dashboard-sidebar" aria-label="Patient portal navigation">
       <a class="dashboard-brand" href="home.html"><img src="nhrx-mark.svg?v=20261113-blue" alt=""><span><strong>NHRX</strong><small>Patient Portal</small></span></a>
@@ -18,7 +18,6 @@
         <a href="#prescriptions" data-view="prescriptions"><span aria-hidden="true">💊</span>Prescriptions</a>
         <a href="#lab-results" data-view="lab-results"><span aria-hidden="true">🧪</span>Lab Results</a>
         <a href="#health-summary" data-view="health-summary"><span aria-hidden="true">💙</span>Health Summary</a>
-        <a href="#patient-images"><span aria-hidden="true">🖼️</span>My Images</a>
         <a data-page="contact.html" href="contact.html"><span aria-hidden="true">📞</span>Contact details</a>
         <a data-page="address.html" href="address.html"><span aria-hidden="true">🏡</span>Address</a>
       </nav>
@@ -38,7 +37,7 @@
 
       <main class="dashboard-main modern-dashboard-main">
         <section class="dashboard-intro" aria-labelledby="welcome-title">
-          <div><div class="eyebrow">PATIENT DASHBOARD</div><h1 id="welcome-title">Welcome back, <span id="patient-first-name">there</span> <span class="welcome-emoji" aria-hidden="true">👋</span></h1><p>Here’s an overview of your care and appointments.</p><p class="profile-load-error" id="profile-load-error" role="status" hidden></p></div>
+          <div><h1 id="welcome-title">Welcome back, <span id="patient-first-name">there</span> <span class="welcome-emoji" aria-hidden="true">👋</span></h1><p class="profile-load-error" id="profile-load-error" role="status" hidden></p></div>
           <div class="patient-id-chip"><span class="patient-id-dot" aria-hidden="true"></span><span>Patient ID</span><strong id="patient-id">—</strong></div>
         </section>
 
@@ -86,12 +85,6 @@
             </section>
           </div>
         </div>
-        <section class="dashboard-panel patient-images-panel" id="patient-images" aria-labelledby="patient-images-title">
-          <div class="panel-heading"><div><h2 id="patient-images-title">My images</h2><p>Click your profile circle above to set or change your image.</p></div></div>
-
-          <div id="patient-images-state" class="dashboard-state" role="status">Loading your images…</div>
-          <div id="patient-images-grid" class="patient-images-grid" hidden></div>
-        </section>
         <section class="dashboard-panel feature-view" id="feature-view" hidden tabindex="-1" aria-live="polite" aria-labelledby="feature-title">
           <a href="#dashboard" class="feature-back" id="feature-back">← Back to dashboard</a>
           <div class="feature-art" aria-hidden="true"><div class="feature-orbit orbit-one"></div><div class="feature-orbit orbit-two"></div><div class="feature-document"><span></span><span></span><span></span><b>?</b></div><div class="feature-spark spark-one">✦</div><div class="feature-spark spark-two">✧</div></div>

@@ -239,6 +239,19 @@ a:hover { color: var(--teal-dark); }
 .booking-dialog { width: min(560px, calc(100% - 28px)); max-width: none; max-height: min(90vh, 800px); padding: 0; border: 0; border-radius: 14px; background: transparent; overflow: auto; }
 .booking-dialog::backdrop { background: rgba(20, 35, 31, .55); backdrop-filter: blur(3px); }
 .booking-dialog .selected-doctor { position: static; margin: 0; box-shadow: 0 24px 70px rgba(10, 35, 27, .2); }
+.booking-success-dialog { width: min(450px, calc(100% - 28px)); max-width: none; padding: 0; border: 0; border-radius: 16px; background: transparent; overflow: visible; }
+.booking-success-dialog::backdrop { background: rgba(20, 35, 31, .58); backdrop-filter: blur(4px); }
+.booking-success-card { display: grid; justify-items: center; padding: 34px 30px 30px; border: 1px solid #dceae2; border-radius: 16px; background: #fff; box-shadow: 0 24px 70px rgba(10, 35, 27, .22); text-align: center; animation: success-card-in .35s ease-out both; }
+.booking-success-icon { display: grid; width: 76px; height: 76px; place-items: center; margin-bottom: 19px; border-radius: 50%; background: #eaf7ef; }
+.booking-success-icon svg { width: 68px; height: 68px; overflow: visible; }
+.success-check-circle { fill: none; stroke: #31a66b; stroke-width: 3; stroke-dasharray: 170; stroke-dashoffset: 170; animation: success-circle-draw .55s ease-out .08s forwards; }
+.success-check-path { fill: none; stroke: #31a66b; stroke-linecap: round; stroke-linejoin: round; stroke-width: 4; stroke-dasharray: 45; stroke-dashoffset: 45; animation: success-check-draw .35s ease-out .52s forwards; }
+.booking-success-card h2 { margin: 8px 0; color: #2c433b; font: 700 21px Manrope, sans-serif; }
+.booking-success-card > p { margin: 0 0 21px; color: #71847a; font-size: 13px; line-height: 1.6; }
+.booking-success-card .button { min-width: 120px; }
+@keyframes success-circle-draw { to { stroke-dashoffset: 0; } }
+@keyframes success-check-draw { to { stroke-dashoffset: 0; } }
+@keyframes success-card-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .selected-mark { display: grid; width: 40px; height: 40px; flex: none; place-items: center; border-radius: 12px; background: #fff; }
 .selected-mark svg { width: 25px; height: 25px; fill: none; stroke: #478879; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .selected-copy { min-width: 0; flex: none; }
@@ -325,6 +338,30 @@ a:hover { color: var(--teal-dark); }
 .sidebar-help strong { color: var(--blue); font-size: 11px; }
 .sidebar-help p { margin: 10px 0 0; color: #74839a; font-size: 10px; line-height: 1.55; }
 .dashboard-content { min-height: 100vh; margin-left: 258px; }
+.patient-home-page .dashboard-intro {
+  padding: 20px 22px;
+  border: 1px solid rgba(211, 244, 224, .34);
+  border-radius: 14px;
+  background: linear-gradient(120deg, rgba(5, 75, 52, .91), rgba(9, 105, 68, .86));
+  box-shadow: 0 10px 26px rgba(20, 92, 57, .13), inset 0 1px 0 rgba(255, 255, 255, .22);
+  backdrop-filter: blur(10px);
+}
+.patient-home-page .dashboard-intro h1 { color: #f5fff8; }
+.patient-home-page .dashboard-intro > div > p { color: #d9efe1; }
+.patient-home-page .dashboard-intro .eyebrow { color: #a9d8bb; }
+.patient-home-page .dashboard-intro > div > .profile-load-error:not([hidden]) { color: #ffd9d3; }
+.patient-home-page .welcome-emoji { margin-left: 7px; font-size: 1.25em; vertical-align: -.1em; }
+.patient-home-page .patient-id-chip {
+  max-width: none;
+  min-height: 58px;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 13px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+.patient-home-page .patient-id-chip strong { font-size: 16px; }
+.patient-home-page .patient-id-dot { width: 9px; height: 9px; }
 .dashboard-header { position: sticky; z-index: 20; top: 0; display: flex; height: 68px; align-items: center; gap: 18px; padding: 0 32px; border-bottom: 1px solid #e6ebf2; background: rgba(255,255,255,.96); backdrop-filter: blur(12px); }
 .header-spacer { flex: 1; }
 .notification-button { display: grid; width: 38px; height: 38px; place-items: center; border: 0; border-right: 1px solid #e8edf4; border-radius: 0; background: transparent; color: #5d6d85; cursor: default; font-size: 21px; }
@@ -505,12 +542,18 @@ a:hover { color: var(--teal-dark); }
 
 /* Keep sign-in and registration in the same white and blue visual system. */
 .auth-page { --ink: #18243a; --muted: #708099; --teal: #1769e8; --teal-dark: #1558c0; --line: #e5ebf3; --soft: #f5f8fc; --shadow: 0 15px 42px rgba(29, 58, 90, .07); background: #f5f8fc; color: #18243a; }
+.auth-page .auth-layout { gap: 14px; padding: 16px; }
+.auth-page .welcome-panel { margin: 0; padding: 94px clamp(38px, 7vw, 100px); padding-right: clamp(36px, 6vw, 72px); border-radius: 24px; background: radial-gradient(ellipse at 16% 12%, rgba(114, 178, 255, .2), transparent 43%), linear-gradient(125deg, #08734e 0%, #087b70 42%, #1769e8 100%); }
+.auth-page .form-panel { border-radius: 24px; }
 .auth-page .topbar { border-color: #e5ebf3; }
-.auth-page .welcome-panel { background: linear-gradient(145deg, #eaf3ff, #f5f9ff 70%, #edf5ff); }
-.auth-page .welcome-panel h1, .auth-page .register-heading h1 { color: #18243a; }
+.auth-page .welcome-panel .eyebrow { color: #b6dfc2; }
+.auth-page .welcome-panel h1 { color: #f5fff8; }
+.auth-page .welcome-panel > p { color: #d8ebe0; }
+.auth-page .welcome-panel .privacy-note { color: #d8ebe0; }
+.auth-page .welcome-panel .privacy-note span { background: rgba(224, 248, 231, .18); color: #e8fff0; }
+.auth-page .welcome-panel .art-orbit { border-color: rgba(210, 242, 220, .38); }
 .auth-page .eyebrow { color: #6e85a6; }
-.auth-page .welcome-art img { box-shadow: 0 18px 42px rgba(23, 105, 232, .13); }
-.auth-page .art-orbit { border-color: #cbdcf3; }
+.auth-page .welcome-art img { box-shadow: 0 18px 42px rgba(2, 43, 29, .26); }
 .auth-page .privacy-note { color: #71829a; }
 .auth-page .privacy-note span { background: #e3efff; color: #1769e8; }
 .auth-page .field label { color: #3d4e67; }
@@ -771,9 +814,9 @@ a:hover { color: var(--teal-dark); }
   .brand { gap: 7px; font-size: 18px; }
   .brand img { width: 32px; height: 32px; }
   .brand-caption { display: none; }
-  .auth-layout { min-height: calc(100vh - 66px); display: block; }
+  .auth-page .auth-layout { min-height: calc(100vh - 66px); display: block; padding: 0; }
   .welcome-panel { display: none; }
-  .form-panel { min-height: calc(100vh - 66px); padding: 38px 23px; }
+  .auth-page .form-panel { min-height: calc(100vh - 66px); padding: 38px 23px; border-radius: 0; }
   .mobile-mark { display: block; width: 43px; height: 43px; margin-bottom: 26px; }
   .form-wrap h2 { font-size: 24px; }
   .register-layout { width: calc(100% - 28px); margin: 35px auto 0; }

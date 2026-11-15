@@ -35,7 +35,6 @@
   const quickActions = document.querySelector(".quick-actions");
   const intro = document.querySelector(".dashboard-intro");
   const featureView = document.querySelector("#feature-view");
-  const imagesPanel = document.querySelector("#patient-images");
   function showView(view) {
     if (!featureCopy[view]) return;
     document.querySelector("#feature-title").textContent = featureCopy[view][0];
@@ -43,7 +42,6 @@
     dashboardColumns.hidden = true;
     quickActions.hidden = true;
     intro.hidden = true;
-    imagesPanel.hidden = true;
     featureView.hidden = false;
     document.querySelector(".modern-dashboard-main").classList.add("feature-mode");
     history.replaceState(null, "", `#${view}`);
@@ -55,7 +53,6 @@
     dashboardColumns.hidden = false;
     quickActions.hidden = false;
     intro.hidden = false;
-    imagesPanel.hidden = false;
     featureView.hidden = true;
     document.querySelector(".modern-dashboard-main").classList.remove("feature-mode");
     history.replaceState(null, "", "#dashboard");
@@ -217,76 +214,6 @@
     }
   }
 
-  const imageState = document.querySelector("#patient-images-state");
-  const imageGrid = document.querySelector("#patient-images-grid");
-  const renewedImageUrls = new Set();
-  const formatBytes = (bytes) => bytes < 1024 * 1024
-    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
-    : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-
-  async function loadPatientImages() {
-    setState("patient-images-state", "Loading your images…");
-    imageGrid.hidden = true;
-    imageGrid.replaceChildren();
-    try {
-      const response = await fetch(`${API_BASE}/patients/me/images`, { headers: authHeaders });
-      const images = await response.json().catch(() => []);
-      if (!response.ok) throw new Error("Images could not be loaded.");
-      if (!Array.isArray(images) || images.length === 0) {
-        setState("patient-images-state", "No images yet. Upload an image and it will appear here.");
-        return;
-      }
-      imageState.hidden = true;
-      imageGrid.hidden = false;
-      for (const image of images) {
-        const card = createElement("article", "patient-image-card");
-        const preview = createElement("img", "patient-image-preview");
-        preview.src = image.imageUrl;
-        preview.alt = "Image uploaded to your patient portal";
-        preview.loading = "lazy";
-        preview.addEventListener("error", () => {
-          if (renewedImageUrls.has(image.imageID)) return;
-          renewedImageUrls.add(image.imageID);
-          loadPatientImages();
-        }, { once: true });
-        const info = createElement("div", "patient-image-info");
-        const date = image.uploadedAt ? new Date(image.uploadedAt) : null;
-        info.append(createElement("strong", "", date && !Number.isNaN(date.getTime())
-          ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date)
-          : "Uploaded image"));
-        info.append(createElement("small", "", formatBytes(Number(image.fileSize) || 0)));
-        const remove = createElement("button", "patient-image-delete", "Delete");
-        remove.type = "button";
-        remove.setAttribute("aria-label", "Delete uploaded image");
-        remove.addEventListener("click", () => deletePatientImage(image.imageID, remove));
-        card.append(preview, info, remove);
-        imageGrid.append(card);
-      }
-    } catch (error) {
-      setState("patient-images-state", "We couldn’t load your images. Please try again.", "error");
-      addRetry("patient-images-state", loadPatientImages);
-    }
-  }
-
-  async function deletePatientImage(imageId, button) {
-    if (!window.confirm("Delete this image from your patient portal?")) return;
-    setBusy(button, true, "Deleting…");
-    try {
-      await apiRequest(`/patients/me/images/${encodeURIComponent(imageId)}`, {
-        method: "DELETE",
-        headers: authHeaders,
-      });
-      window.dispatchEvent(new Event("patient-images-updated"));
-      await loadPatientImages();
-      await showFeedback("Image deleted from your portal.", "success");
-    } catch (error) {
-      await showFeedback(error.message || "Image could not be deleted.", "error");
-      setBusy(button, false, "Delete");
-    }
-  }
-
   loadPatient();
   loadAppointments();
-  loadPatientImages();
-  window.addEventListener("patient-images-updated", loadPatientImages);
 })();

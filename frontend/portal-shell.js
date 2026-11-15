@@ -25,7 +25,6 @@
       <a href="home.html#prescriptions"><span aria-hidden="true">💊</span>Prescriptions</a>
       <a href="home.html#lab-results"><span aria-hidden="true">🧪</span>Lab Results</a>
       <a href="home.html#health-summary"><span aria-hidden="true">💙</span>Health Summary</a>
-      <a href="home.html#patient-images"><span aria-hidden="true">🖼️</span>My Images</a>
       <a data-page="contact.html" href="contact.html"><span aria-hidden="true">📞</span>Contact details</a>
       <a data-page="address.html" href="address.html"><span aria-hidden="true">🏡</span>Home address</a>
     </nav>
