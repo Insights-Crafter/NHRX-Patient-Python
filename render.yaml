@@ -38,3 +38,19 @@ services:
         sync: false
       - key: R2_PATIENT_BUCKET
         sync: false
+      - key: R2_REPORTS_ENDPOINT
+        sync: false
+      - key: R2_REPORTS_ACCESS_KEY_ID
+        sync: false
+      - key: R2_REPORTS_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_REPORTS_BUCKET
+        sync: false
+      - key: R2_REPORTS_REGION
+        value: auto
+      - key: R2_LAB_REPORTS_PREFIX
+        value: Lab-Reports/
+      - key: R2_RADIOLOGY_REPORTS_PREFIX
+        value: Radiology-Reports/
+      - key: R2_PRESCRIPTIONS_PREFIX
+        value: prescriptions/
