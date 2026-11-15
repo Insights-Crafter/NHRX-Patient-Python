@@ -374,6 +374,11 @@ a:hover { color: var(--teal-dark); }
 .profile-avatar-uploadable::after { position: absolute; right: -1px; bottom: -1px; display: grid; width: 17px; height: 17px; place-items: center; border: 1px solid #fff; border-radius: 50%; background: #0873e6; color: #fff; content: "📷"; font: 9px/1 sans-serif; }
 .profile-avatar-uploadable:focus-visible { outline: 3px solid #9fc8ff; outline-offset: 3px; }
 .patient-documents { width: min(100%, 760px); margin: 24px auto; }
+.feature-view.documents-mode { min-height: 0; align-items: stretch; justify-content: flex-start; text-align: left; }
+.feature-view.documents-mode .feature-art, .feature-view.documents-mode > .eyebrow, .feature-view.documents-mode .feature-home-button { display: none; }
+.feature-view.documents-mode .feature-back { align-self: flex-start; }
+.feature-view.documents-mode h2, .feature-view.documents-mode .feature-description { align-self: flex-start; text-align: left; }
+.feature-view.documents-mode .feature-description { max-width: none; }
 .patient-document-list { display: grid; gap: 12px; text-align: left; }
 .patient-document-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 18px 20px; border: 1px solid #e4ebf4; border-radius: 14px; background: #fff; }
 .patient-document-details { display: grid; gap: 5px; min-width: 0; color: #24334b; }
@@ -382,6 +387,7 @@ a:hover { color: var(--teal-dark); }
 .patient-document-details p { margin: 3px 0 0; color: #56657a; font-size: 13px; line-height: 1.5; }
 .patient-document-open { flex: 0 0 auto; padding: 10px 15px; border-radius: 9px; background: #0873e6; color: #fff; text-decoration: none; font: 700 12px Manrope, sans-serif; }
 .patient-document-open[aria-disabled="true"] { opacity: .55; pointer-events: none; }
+.patient-document-missing { color: #a04c2e !important; }
 @media (max-width: 520px) { .patient-document-card { align-items: flex-start; flex-direction: column; gap: 12px; padding: 15px; } }
 .profile-avatar-uploadable[aria-busy="true"] { opacity: .65; }
 .profile-menu-name { max-width: 180px; overflow: hidden; color: #28364d; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }

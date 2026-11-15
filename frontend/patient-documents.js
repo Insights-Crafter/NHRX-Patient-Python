@@ -5,6 +5,7 @@
   const panel = document.querySelector("#patient-documents");
   const title = document.querySelector("#feature-title");
   const description = document.querySelector("#feature-description");
+  const featureView = panel?.closest(".feature-view");
   if (!panel || !title || !description) return;
 
   const messages = {
@@ -21,8 +22,13 @@
 
   async function load(view) {
     const copy = messages[view];
-    if (!copy) { panel.hidden = true; return; }
+    if (!copy) {
+      panel.hidden = true;
+      featureView?.classList.remove("documents-mode");
+      return;
+    }
     panel.hidden = false;
+    featureView?.classList.add("documents-mode");
     title.textContent = copy[0];
     description.textContent = copy[1];
     panel.replaceChildren(element("p", "dashboard-state", "Loading your documents…"));
@@ -48,8 +54,9 @@
         }
         details.append(element("small", "", meta.join(" · ")));
         if (record.description) details.append(element("p", "", record.description));
-        const open = element("a", "patient-document-open", "View file");
+        const open = element("a", "patient-document-open", record.available === false ? "File unavailable" : "View file");
         try {
+          if (record.available === false || !record.documentUrl) throw new Error("File unavailable");
           const url = new URL(record.documentUrl);
           if (url.protocol !== "https:") throw new Error("Invalid document URL");
           open.href = url.href;
@@ -58,6 +65,7 @@
         } catch {
           open.setAttribute("aria-disabled", "true");
         }
+        if (record.available === false) details.append(element("small", "patient-document-missing", "This file is missing from storage. Please contact your care team."));
         card.append(details, open);
         list.append(card);
       }

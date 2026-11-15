@@ -6,12 +6,18 @@ from datetime import timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
 from appointments.models.AppointmentModel import Appointments
 from database.database import get_db
 from Patient.models.PatientDocument import PatientDocument
-from uploads.ImageUploads import delete_patient_image, get_patient_image_url, upload_patient_document
+from uploads.ImageUploads import (
+    delete_report_document,
+    get_report_document_url,
+    report_document_exists,
+    upload_report_document,
+)
 from utilityfunctions.reusable_functions import extract_doctor_id, extract_patient_id
 
 logger = logging.getLogger(__name__)
@@ -95,9 +101,10 @@ def upload_appointment_document(
     size, content_type, extension = _inspect_document(file)
     submitted_name = (file.filename or "document").replace("\\", "/").rsplit("/", 1)[-1]
     safe_name = submitted_name.strip()[:255] or f"{document_type}.{extension}"
-    object_key = f"patients/{appointment.patientID}/documents/{uuid.uuid4().hex}.{extension}"
+    object_prefix = "Lab-Reports" if document_type == "report" else "prescriptions"
+    object_key = f"{object_prefix}/{appointment.patientID}/{doctor_id}/{uuid.uuid4().hex}.{extension}"
     try:
-        upload_patient_document(file.file, object_key, content_type)
+        upload_report_document(file.file, object_key, content_type)
     except Exception as exc:
         logger.exception("Doctor document upload failed")
         raise HTTPException(status_code=502, detail="Document upload failed. Please try again.") from exc
@@ -120,7 +127,7 @@ def upload_appointment_document(
     except Exception as exc:
         db.rollback()
         try:
-            delete_patient_image(object_key)
+            delete_report_document(object_key)
         except Exception:
             logger.exception("Failed to clean up an unreferenced document object")
         logger.exception("Document metadata could not be saved")
@@ -149,8 +156,13 @@ def list_my_documents(
         query = query.filter(PatientDocument.documentType == document_type)
     records = query.order_by(PatientDocument.uploadedAt.desc(), PatientDocument.documentID.desc()).all()
     try:
-        return [
-            {
+        documents = []
+        for item in records:
+            belongs_to_patient = item.objectKey.startswith(
+                (f"Lab-Reports/{patient_id}/", f"Radiology-Reports/{patient_id}/", f"prescriptions/{patient_id}/")
+            )
+            available = belongs_to_patient and report_document_exists(item.objectKey)
+            documents.append({
                 "documentID": item.documentID,
                 "documentType": item.documentType,
                 "fileName": item.fileName,
@@ -158,10 +170,67 @@ def list_my_documents(
                 "contentType": item.contentType,
                 "fileSize": item.fileSize,
                 "uploadedAt": _iso(item.uploadedAt),
-                "documentUrl": get_patient_image_url(item.objectKey),
-            }
-            for item in records
-        ]
+                "available": available,
+                "documentUrl": get_report_document_url(item.objectKey) if available else None,
+            })
+        bind = db.get_bind()
+        inspector = inspect(bind)
+        tables = set(inspector.get_table_names())
+        if "LabReport" in tables:
+            columns = {column["name"] for column in inspector.get_columns("LabReport")}
+            required = {"id", "patientID", "fileName", "fileType", "createdAt", "objectKey"}
+            if required.issubset(columns):
+                rows = db.execute(text('''
+                    SELECT id, "fileName", "fileType", "createdAt", "objectKey"
+                    FROM "LabReport"
+                    WHERE "patientID" = :patient_id AND "objectKey" IS NOT NULL
+                    ORDER BY "createdAt" DESC, id DESC
+                '''), {"patient_id": patient_id}).mappings()
+                for item in rows:
+                    object_key = item["objectKey"]
+                    if not object_key.startswith((f"Lab-Reports/{patient_id}/", f"Radiology-Reports/{patient_id}/")):
+                        continue
+                    available = report_document_exists(object_key)
+                    documents.append({
+                        "documentID": f"lab-report-{item['id']}",
+                        "documentType": "report",
+                        "fileName": item["fileName"],
+                        "description": None,
+                        "contentType": item["fileType"],
+                        "fileSize": None,
+                        "uploadedAt": _iso(item["createdAt"]),
+                        "available": available,
+                        "documentUrl": get_report_document_url(object_key) if available else None,
+                    })
+        if "MedicalRecords" in tables:
+            columns = {column["name"] for column in inspector.get_columns("MedicalRecords")}
+            if {"recordID", "patientID", "recordDATE", "prescriptionObjectKey"}.issubset(columns):
+                rows = db.execute(text('''
+                    SELECT "recordID", "recordDATE", "prescriptionObjectKey"
+                    FROM "MedicalRecords"
+                    WHERE "patientID" = :patient_id AND "prescriptionObjectKey" IS NOT NULL
+                    ORDER BY "recordDATE" DESC, "recordID" DESC
+                '''), {"patient_id": patient_id}).mappings()
+                for item in rows:
+                    object_key = item["prescriptionObjectKey"]
+                    if not object_key.startswith(f"prescriptions/{patient_id}/"):
+                        continue
+                    available = report_document_exists(object_key)
+                    documents.append({
+                        "documentID": f"prescription-{item['recordID']}",
+                        "documentType": "prescription",
+                        "fileName": f"Prescription - {item['recordDATE'].date().isoformat() if item['recordDATE'] else 'Medical record'}",
+                        "description": None,
+                        "contentType": "application/pdf",
+                        "fileSize": None,
+                        "uploadedAt": _iso(item["recordDATE"]),
+                        "available": available,
+                        "documentUrl": get_report_document_url(object_key) if available else None,
+                    })
+        if document_type:
+            documents = [item for item in documents if item["documentType"] == document_type]
+        documents.sort(key=lambda item: item["uploadedAt"] or "", reverse=True)
+        return documents
     except Exception as exc:
         logger.exception("Unable to create temporary URLs for patient documents")
         raise HTTPException(status_code=502, detail="Documents are temporarily unavailable.") from exc
