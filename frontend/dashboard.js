@@ -19,10 +19,10 @@
   scrim.addEventListener("click", () => setMenuOpen(false));
 
   const featureCopy = {
-    "medical-records": ["Medical records", "This section is still being built. Your personal health information will appear here when it is connected securely."],
-    "lab-results": ["Lab results", "This page isn’t here yet. Your test results will appear here when this section is added to the portal."],
+    "medical-records": ["Medical records", "Reports and prescriptions your doctor has uploaded will appear here."],
+    "lab-results": ["Lab results", "Loading your doctor-uploaded reports…"],
     "visit-summaries": ["Visit summaries", "This page isn’t here yet. Visit summaries will appear here when this section is added to the portal."],
-    prescriptions: ["Prescriptions", "This page isn’t here yet. Prescription details will appear here when this section is added to the portal."],
+    prescriptions: ["Prescriptions", "Loading your doctor-uploaded prescriptions…"],
     "health-summary": ["Health summary", "This section is still being built. It will show your conditions, allergies, medications and blood group when connected securely."],
     allergies: ["Allergies", "This page isn’t here yet. Allergy details will appear here when this section is added to the portal."],
     medications: ["Medications", "This page isn’t here yet. Medication details will appear here when this section is added to the portal."],
